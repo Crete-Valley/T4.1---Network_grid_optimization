@@ -2,7 +2,7 @@
 ### How to use dps-server with pre/post processing
 
 # DPS-SERVER
-A demonstration on how to use dps-server is in the repo [https://github.com/SystemsPurge/dps-server](url).<br>
+A demonstration on how to use dps-server is in [this repo](https://github.com/SystemsPurge/dps-server).<br>
 
 # CRETE-VALLEY
 The particularities of the project include:
