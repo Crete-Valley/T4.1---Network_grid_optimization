@@ -22,7 +22,7 @@ Env variables are :
 - scenario=scenario number in factors file
 - xml=system data folder ( CIM FORMAT )
 - lines=line ratings data file path
-- trafos=transformer ratings data file path
+- transformers=transformer ratings data file path
 - busses=bus ratings data file path<br>
 Env file should have each variable in a seperate line , in the format `key=value`.<br>
 Once everything is configured you can run `npm run demo`, has been built using node 23.1 and npm 10.9

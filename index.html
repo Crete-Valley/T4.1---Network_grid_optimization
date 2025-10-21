@@ -66,17 +66,43 @@
                 <input id="use_xml" type="text" name="use_xml" value="">
               </div>
               </div>
+            <div class="row">
+              <div class="column column-50">
+                <label for="use_profile">Use Profile</label>
+                <input id="use_profile" type="text" name="use_profile" value="">
+              </div>
+              </div>
               <div class="row">
                 <div class="column column-offset-25">
                   <input id="sim-submit" type="submit" class="button button-sandy" value="Send Sim"/>
                 </div>
             </div>
           </form> 
-          <form id="file-form">
+          <div class="row">
+            <form id="xml-form">
               <label for="xml-input"></label>
               <input id="xml-input" type="file"/>
-              <input id="file-submit" type="submit" class="button button-sandy" value="Upload XML"/>
-          </form>
+              <input id="xml-submit" type="submit" class="button button-sandy" value="Upload XML"/>
+            </form>
+            <form id="rating-form">
+              <label for="rating-input"></label>
+              <input id="rating-input" type="file" accept=".xlsx"/>
+              <input id="rating-submit" type="submit" class="button button-sandy" value="Upload Factor"/>
+            </form>
+          </div>
+            <form id="profile-form">
+            <div class="row"> 
+              <div class="column column-50">
+                <label for="profile-input"></label>
+                <input id="profile-input" type="file" accept=".xlsx"/>
+                <input id="profile-submit" type="submit" class="button button-sandy" value="Upload Profile"/>
+              </div>
+              <div class="column column-50">
+                <label for="scenario">Scenario</label>
+                <input id="scenario-input" type="number" name="scenario" value="1">
+              </div>
+            </div>
+            </form>
         </div>
         <div class="column column-10" id="res-column">
           <form id="res-form">
@@ -86,7 +112,6 @@
           </form>
             <h6 id="res-heading">Results</h6>
             <ul id="res-list">
-
             </ul>
         </div>
         <div class="column column-70" id="graph-column">
@@ -100,5 +125,5 @@
        </div>
     </div>
   </body>
-  
+  <script src="./node_modules/exceljs/dist/exceljs.min.js"></script>
   <script src="./script.js"></script>

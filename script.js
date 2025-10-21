@@ -83,13 +83,13 @@
     function mkapi() {
         var _this = this;
         return {
-            upfile: function (file, ep) { return __awaiter(_this, void 0, void 0, function () {
+            upfile: function (file, ep, file_name) { return __awaiter(_this, void 0, void 0, function () {
                 var body, res, json;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             body = new FormData();
-                            body.append("file", new Blob([file]), file.name);
+                            body.append("file", new Blob([file]), file_name);
                             return [4 /*yield*/, fetch("/".concat(ep), { method: "POST", body: body })];
                         case 1:
                             res = _a.sent();
@@ -3924,7 +3924,7 @@
       return new Linear(context);
     }
 
-    function x$1(p) {
+    function x(p) {
       return p[0];
     }
 
@@ -3932,14 +3932,14 @@
       return p[1];
     }
 
-    function line(x, y$1) {
+    function line(x$1, y$1) {
       var defined = constant(true),
           context = null,
           curve = curveLinear,
           output = null,
           path = withPath(line);
 
-      x = typeof x === "function" ? x : (x === undefined) ? x$1 : constant(x);
+      x$1 = typeof x$1 === "function" ? x$1 : (x$1 === undefined) ? x : constant(x$1);
       y$1 = typeof y$1 === "function" ? y$1 : (y$1 === undefined) ? y : constant(y$1);
 
       function line(data) {
@@ -3956,14 +3956,14 @@
             if (defined0 = !defined0) output.lineStart();
             else output.lineEnd();
           }
-          if (defined0) output.point(+x(d, i, data), +y$1(d, i, data));
+          if (defined0) output.point(+x$1(d, i, data), +y$1(d, i, data));
         }
 
         if (buffer) return output = null, buffer + "" || null;
       }
 
       line.x = function(_) {
-        return arguments.length ? (x = typeof _ === "function" ? _ : constant(+_), line) : x;
+        return arguments.length ? (x$1 = typeof _ === "function" ? _ : constant(+_), line) : x$1;
       };
 
       line.y = function(_) {
@@ -4030,10 +4030,176 @@
 
     Transform.prototype;
 
+    function get_grapher(base, x_grid, y_grid, x_offset, y_offset, x_period, y_period) {
+        var increment = 0x6c4a33;
+        var w = window.innerWidth * 0.6;
+        var m = 50;
+        var h = window.innerHeight * 0.75;
+        var size = 301;
+        var leg = select("#graph-legend");
+        var xScale = linear()
+            .domain([0, size - 1])
+            .range([0, w]);
+        var yScale = linear().domain([-size + 1, size - 1]).range([h, 0]);
+        function prep_graph_area() {
+            var x_axis = select("#x-axis");
+            var y_axis = select("#y-axis");
+            x_axis
+                .call(axisTop(xScale).tickValues(xScale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * h))
+                .attr("transform", "translate(".concat(m, ",").concat((h / 2), ")"));
+            selectAll(".tick line")
+                .attr("transform", "translate(0,".concat(-h / 2, ")"));
+            y_axis
+                .attr("transform", "translate(".concat(m, ",0)"))
+                .call(axisLeft(yScale).tickSize(-w).tickSizeOuter(0));
+        }
+        function clear_graph_area() {
+            select("#graph-svg").select("#parent-g").remove();
+            select("#graph-svg").append("g").attr("id", "parent-g");
+        }
+        var x = Array.from(Array(size), function (_, idx) { return idx; });
+        function draw_graph(y, max) {
+            var data = x.map(function (_x, _i) { return [
+                _x,
+                (y[_i] * (size - 1)) / max,
+            ]; });
+            var parent_g = select("#parent-g");
+            var lin = line()
+                .x(function (d) { return xScale(d[0]); })
+                .y(function (d) { return yScale(d[1]); });
+            parent_g
+                .append("path")
+                .datum(data)
+                .attr("class", "line")
+                .attr("d", lin)
+                .attr("transform", "translate(50, 0)")
+                .attr("stroke", "#" + base.toString(16).padStart(6, "0").toUpperCase())
+                .attr("fill", "none");
+            base = (base + increment) % 0xffffff;
+        }
+        function legend(k, color, idx) {
+            // Handmade legend
+            leg.append("circle").attr("cx", x_offset + 220 * x_grid).attr("cy", y_offset + 25 * y_grid).attr("r", 6).style("fill", color);
+            leg.append("text").attr("x", x_offset + 220 * x_grid + 10).attr("y", y_offset + 25 * y_grid + 3).text(k).style("font-size", "15px").attr("alignment-baseline", "middle");
+            y_grid = (y_grid + 1) % y_period;
+            if (y_grid === 0) {
+                x_grid = (x_grid + 1) % x_period;
+            }
+        }
+        function to_arr(v) {
+            return Object.entries(v).reduce(function (arr, _a) {
+                var k = _a[0], v = _a[1];
+                arr[parseInt(k)] = v;
+                return arr;
+            }, Array(Object.keys(v).length).fill(0));
+        }
+        return {
+            clear_graph_area: clear_graph_area,
+            prep_graph_area: prep_graph_area,
+            to_arr: to_arr,
+            legend: legend,
+            draw_graph: draw_graph
+        };
+    }
+
+    var rating = undefined;
+    function add_local(file) {
+        return __awaiter(this, void 0, void 0, function () {
+            var wb, _a, _b, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        wb = new ExcelJS.Workbook();
+                        _a = file.name.split('.').slice(-1)[0];
+                        switch (_a) {
+                            case 'xlsx': return [3 /*break*/, 1];
+                        }
+                        return [3 /*break*/, 4];
+                    case 1:
+                        _c = (_b = wb.xlsx).load;
+                        return [4 /*yield*/, file.arrayBuffer()];
+                    case 2: return [4 /*yield*/, _c.apply(_b, [_d.sent()])];
+                    case 3:
+                        _d.sent();
+                        return [3 /*break*/, 5];
+                    case 4: throw new Error("Unsupported file extension: " + file.name);
+                    case 5:
+                        rating = wb;
+                        return [2 /*return*/];
+                }
+            });
+        });
+    }
+    //replace inequivalent comp names between CIM and profile data
+    function map_items(items) {
+        return items.map(function (c) {
+            if (!c || !(c.startsWith('machine')))
+                return undefined;
+            return c.valueOf().replace('machine', 'genstat').replace('_MV', '');
+        });
+    }
+    function preproc(scenario, profile_file) {
+        return __awaiter(this, void 0, void 0, function () {
+            var profiles, _a, _b, factors, ncol;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        if (!rating) {
+                            throw new Error('No scenarios file provided');
+                        }
+                        profiles = new ExcelJS.Workbook();
+                        _b = (_a = profiles.xlsx).load;
+                        return [4 /*yield*/, profile_file.arrayBuffer()];
+                    case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent()])];
+                    case 2:
+                        _c.sent();
+                        factors = rating.getWorksheet('generator');
+                        ncol = factors.getColumn(1).values;
+                        profiles.eachSheet(function (s, sid) {
+                            //get names
+                            var r = s.getRow(3).values;
+                            //replace keywords
+                            r = map_items(r);
+                            r.forEach(function (c, pidx) {
+                                //if comp name has no entry in factors exit
+                                if (!c)
+                                    return;
+                                var fidx = ncol.indexOf(c);
+                                if (fidx < 0)
+                                    return;
+                                //get corresponding factor
+                                var f = factors.getRow(fidx + 1).getCell(scenario + 2).value;
+                                //Multiply each value of component with factor
+                                s.eachRow(function (rn) {
+                                    if (typeof rn.getCell(pidx + 3).value !== 'number')
+                                        return;
+                                    rn.getCell(pidx + 3).value = f * rn.getCell(pidx + 3).value;
+                                    rn.getCell(pidx + 3).value;
+                                    rn.commit();
+                                });
+                            });
+                        });
+                        return [4 /*yield*/, profiles.xlsx.writeBuffer()];
+                    case 3: return [2 /*return*/, _c.sent()];
+                }
+            });
+        });
+    }
+
+    var base = 0xf9a825;
+    var x_grid = 0;
+    var y_grid = 0;
+    var x_offset = 10;
+    var y_offset = 10;
+    var x_period = 6;
+    var y_period = 6;
+    var _a = get_grapher(base, x_grid, y_grid, x_offset, y_offset, x_period, y_period), clear_graph_area = _a.clear_graph_area, draw_graph = _a.draw_graph, prep_graph_area = _a.prep_graph_area, to_arr = _a.to_arr, legend = _a.legend;
     function mkbuilder(api) {
         var elems = function () {
             var status = (document.getElementById("status-header"));
-            var xmlform = document.getElementById("file-form");
+            var xmlform = document.getElementById("xml-form");
+            var profileform = document.getElementById("profile-form");
+            var ratingform = document.getElementById("rating-form");
             var simform = document.getElementById("sim-form");
             var resform = document.getElementById("res-form");
             var graphsvg = document.getElementById("graph-svg");
@@ -4042,6 +4208,8 @@
                 simform: simform,
                 xmlform: xmlform,
                 resform: resform,
+                profileform: profileform,
+                ratingform: ratingform,
                 status: status,
                 graphsvg: graphsvg,
                 reslist: reslist
@@ -4082,7 +4250,7 @@
                                 if (k.trim() === "time")
                                     return;
                                 draw_graph(to_arr(v), max_1);
-                                legend(k, '#' + base.toString(16).padStart(6, "0").toUpperCase());
+                                legend(k, '#' + base.toString(16).padStart(6, "0").toUpperCase(), i);
                             });
                             return [3 /*break*/, 4];
                         case 3:
@@ -4125,30 +4293,77 @@
                 });
             }); };
         }
-        function mkxmlform(xmlform, status) {
+        function mkratingform(form) {
             var _this = this;
-            xmlform.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
+            form.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
+                var target, file;
+                return __generator(this, function (_a) {
+                    ev.preventDefault();
+                    target = (document.getElementById("rating-input"));
+                    if (target && target.files) {
+                        file = target.files[0];
+                        add_local(file);
+                    }
+                    return [2 /*return*/];
+                });
+            }); };
+        }
+        function mkxmlform(form, rtype, status) {
+            var _this = this;
+            form.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
                 var target, file, e_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             ev.preventDefault();
-                            target = (document.getElementById("xml-input"));
+                            target = (document.getElementById(rtype + "-input"));
                             if (!(target && target.files)) return [3 /*break*/, 4];
                             file = target.files[0];
                             _a.label = 1;
                         case 1:
                             _a.trys.push([1, 3, , 4]);
-                            return [4 /*yield*/, api.upfile(file, "xml")];
+                            return [4 /*yield*/, api.upfile(file, rtype, file.name)];
                         case 2:
                             _a.sent();
                             status.innerText = "\nSuccessfully uploaded ".concat(file.name);
                             return [3 /*break*/, 4];
                         case 3:
                             e_3 = _a.sent();
-                            status.innerText = "\nError uploading XML:\n ".concat(e_3);
+                            status.innerText = "\nError uploading ".concat(rtype, ":\n ").concat(e_3);
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
+                    }
+                });
+            }); };
+        }
+        function mkprofileform(profileform, status) {
+            var _this = this;
+            profileform.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
+                var file_input, pre_file, scenario, file, e_4;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            ev.preventDefault();
+                            file_input = (document.getElementById("profile-input"));
+                            if (!(file_input && file_input.files)) return [3 /*break*/, 5];
+                            pre_file = file_input.files[0];
+                            scenario = Number(document.getElementById("scenario-input").value);
+                            return [4 /*yield*/, preproc(scenario, pre_file)];
+                        case 1:
+                            file = _a.sent();
+                            _a.label = 2;
+                        case 2:
+                            _a.trys.push([2, 4, , 5]);
+                            return [4 /*yield*/, api.upfile(file, "ts/profile", pre_file.name)];
+                        case 3:
+                            _a.sent();
+                            status.innerText = "\nSuccessfully uploaded ".concat(pre_file.name);
+                            return [3 /*break*/, 5];
+                        case 4:
+                            e_4 = _a.sent();
+                            status.innerText = "\nError uploading profile:\n ".concat(e_4);
+                            return [3 /*break*/, 5];
+                        case 5: return [2 /*return*/];
                     }
                 });
             }); };
@@ -4157,84 +4372,19 @@
             elems: elems,
             mksimform: mksimform,
             mkxmlform: mkxmlform,
+            mkprofileform: mkprofileform,
             mkresform: mkresform,
+            mkratingform: mkratingform
         };
     }
     var api = mkapi();
     var builder = mkbuilder(api);
     var elems = builder.elems();
-    builder.mkxmlform(elems.xmlform, elems.status);
+    builder.mkxmlform(elems.xmlform, "xml", elems.status);
+    builder.mkprofileform(elems.profileform, elems.status);
+    builder.mkratingform(elems.ratingform);
     builder.mksimform(elems.simform, elems.status);
     builder.mkresform(elems.resform, elems.status);
-    var base = 0xf9a825;
-    var increment = 0x6c4a33;
-    var w = window.innerWidth * 0.6;
-    var m = 50;
-    var h = window.innerHeight * 0.75;
-    var size = 301;
-    var leg = select("#graph-legend");
-    var xScale = linear()
-        .domain([0, size - 1])
-        .range([0, w]);
-    var yScale = linear().domain([-size + 1, size - 1]).range([h, 0]);
-    function prep_graph_area() {
-        var x_axis = select("#x-axis");
-        var y_axis = select("#y-axis");
-        x_axis
-            .call(axisTop(xScale).tickValues(xScale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * h))
-            .attr("transform", "translate(".concat(m, ",").concat((h / 2), ")"));
-        selectAll(".tick line")
-            .attr("transform", "translate(0,".concat(-h / 2, ")"));
-        y_axis
-            .attr("transform", "translate(".concat(m, ",0)"))
-            .call(axisLeft(yScale).tickSize(-w).tickSizeOuter(0));
-    }
-    function clear_graph_area() {
-        select("#graph-svg").select("#parent-g").remove();
-        select("#graph-svg").append("g").attr("id", "parent-g");
-    }
-    var x = Array.from(Array(size), function (_, idx) { return idx; });
-    function draw_graph(y, max) {
-        var data = x.map(function (_x, _i) { return [
-            _x,
-            (y[_i] * (size - 1)) / max,
-        ]; });
-        var parent_g = select("#parent-g");
-        var lin = line()
-            .x(function (d) { return xScale(d[0]); })
-            .y(function (d) { return yScale(d[1]); });
-        parent_g
-            .append("path")
-            .datum(data)
-            .attr("class", "line")
-            .attr("d", lin)
-            .attr("transform", "translate(50, 0)")
-            .attr("stroke", "#" + base.toString(16).padStart(6, "0").toUpperCase())
-            .attr("fill", "none");
-        base = (base + increment) % 0xffffff;
-    }
-    var x_grid = 0;
-    var y_grid = 0;
-    var x_offset = 10;
-    var y_offset = 10;
-    var x_period = 6;
-    var y_period = 6;
-    function legend(k, color, idx) {
-        // Handmade legend
-        leg.append("circle").attr("cx", x_offset + 220 * x_grid).attr("cy", y_offset + 25 * y_grid).attr("r", 6).style("fill", color);
-        leg.append("text").attr("x", x_offset + 220 * x_grid + 10).attr("y", y_offset + 25 * y_grid + 3).text(k).style("font-size", "15px").attr("alignment-baseline", "middle");
-        y_grid = (y_grid + 1) % y_period;
-        if (y_grid === 0) {
-            x_grid = (x_grid + 1) % x_period;
-        }
-    }
-    function to_arr(v) {
-        return Object.entries(v).reduce(function (arr, _a) {
-            var k = _a[0], v = _a[1];
-            arr[parseInt(k)] = v;
-            return arr;
-        }, Array(Object.keys(v).length).fill(0));
-    }
     prep_graph_area();
     setInterval(function () {
         api.get_results()
