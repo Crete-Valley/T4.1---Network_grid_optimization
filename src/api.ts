@@ -30,9 +30,9 @@ const handle_err:(json:object)=>object = (json:object)=>{
 
 export function mkapi() {
   return {
-    upfile: async (file: File, ep: string) => {
+    upfile: async (file: File|ArrayBuffer, ep: string,file_name:string) => {
       const body = new FormData();
-      body.append("file", new Blob([file]), file.name);
+      body.append("file", new Blob([file]), file_name);
       const res = await fetch(`/${ep}`, { method: "POST", body: body });
       const json = await res.json();
       return handle_err(json);
