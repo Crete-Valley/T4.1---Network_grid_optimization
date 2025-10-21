@@ -1,0 +1,20 @@
+services:
+  dps:
+    image: soullessblob/dps-server:alpha
+    hostname: dps-server
+    container_name: dps
+    environment:
+      DPS_EXPORT: false
+      DPS_LOG_LEVEL: INFO
+    ports:
+      - 5000:5000
+
+  demo:
+    image: node:23-alpine3.22
+    container_name: demo
+    hostname: demo
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app
+    command: ["sh","-c","npm install --prefix app && npm run start --prefix app"]

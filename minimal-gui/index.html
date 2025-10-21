@@ -1,0 +1,104 @@
+<head>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+  </head>
+  <body>
+    <div id="main" class="container">
+      <div class="row" id="meta-row">
+        <div class="column column-20" id="status-column">
+          <h3 id="status-header">Starting status header</h3>
+        </div>
+      <div class="column column-80" id="legend-column">
+        <svg id="graph-legend">
+        </svg>
+      </div>
+      </div>
+       <div class="row" id="work-row">
+        <div class="column column-20" id="sidebar-column">
+          <form id="sim-form">
+            <div class="row">
+              <div class="column column-50">
+                <label for="duration">Duration</label>
+                <input id="duration" type="text" name="duration" value="300">
+              </div>
+              <div class="column column-50">
+                <label for="timestep">Timestep</label>
+                <input id="timestep" type="text" name="timestep" value="1">
+              </div>
+            </div>
+            <div class="row">
+              <div class="column column-50">
+                <label for="name">Name</label>
+                <input id="name" type="text" name="name" value="default">
+              </div>
+              <div class="column column-50">
+                <label for="freq">Frequency</label>
+                <input id="freq" type="text" name="freq" value="50">
+              </div>
+            </div>
+            <div class="row">
+              <div class="column column-50">
+                <label for="domain">Domain</label>
+                <input id="domain" type="text" name="domain" value="SP">
+              </div>
+              <div class="column column-50">
+                <label for="solver">Solver</label>
+                <input id="solver" type="text" name="solver" value="NRP">
+              </div>
+            </div>
+            <div class="row">
+              <div class="column column-50">
+                <label for="opf">Optimal Powerflow</label>
+                <input id="opf" type="text" name="opf" value="false">
+              </div>
+              <div class="column column-50">
+                <label for="dspf">DPsim Powerflow</label>
+                <input id="dspf" type="text" name="dspf" value="false">
+              </div>
+            </div>
+            <div class="row">
+              <div class="column column-50">
+                <label for="pppf">PP Powerflow</label>
+                <input id="pppf" type="text" name="pppf" value="false">
+              </div>
+              <div class="column column-50">
+                <label for="use_xml">Use XML</label>
+                <input id="use_xml" type="text" name="use_xml" value="">
+              </div>
+              </div>
+              <div class="row">
+                <div class="column column-offset-25">
+                  <input id="sim-submit" type="submit" class="button button-sandy" value="Send Sim"/>
+                </div>
+            </div>
+          </form> 
+          <form id="file-form">
+              <label for="xml-input"></label>
+              <input id="xml-input" type="file"/>
+              <input id="file-submit" type="submit" class="button button-sandy" value="Upload XML"/>
+          </form>
+        </div>
+        <div class="column column-10" id="res-column">
+          <form id="res-form">
+            <label for="res-input"></label>
+            <input id="res-input" type="text"/>
+            <input id="res-submit" type="submit" class="button button-sandy" value="Display Result">
+          </form>
+            <h6 id="res-heading">Results</h6>
+            <ul id="res-list">
+
+            </ul>
+        </div>
+        <div class="column column-70" id="graph-column">
+          <svg id="graph-svg">
+            <g id="x-axis"></g>
+            <g id="y-axis"></g>
+            <g id="parent-g"></g>
+        </svg>
+        </div>
+
+       </div>
+    </div>
+  </body>
+  
+  <script src="./script.js"></script>

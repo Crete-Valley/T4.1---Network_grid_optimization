@@ -1,0 +1,76 @@
+body{
+    margin:0;
+    padding:0;
+}
+
+#main{
+    width:100vw;
+    margin:0;
+    height:100vh;
+}
+
+#meta-row{
+    width: 100vw;
+    height:25vh;
+}
+
+#status-column{
+    text-align:left;
+}
+
+#work-row{
+    width: 100vw;
+}
+
+#graph-legend{
+    height:100%;
+    width:100%
+}
+
+#res-heading{
+    text-align:center
+}
+
+
+#graph-svg{
+    height:100%;
+    width:100%;
+}
+
+.tick line {
+    stroke: #ccc; 
+    stroke-opacity: 0.3; /* FIX: Changed to 0.3 for higher transparency */
+    shape-rendering: crispEdges;
+}
+
+.grid path {
+    stroke-opacity:0;
+}
+
+
+.border-bottom{
+    border-radius: 1%;
+    border-bottom: 5px ridge #155263;
+}
+
+.border-top{
+    border-radius: 1%;
+    border-top: 5px ridge #155263;
+}
+
+.border-right{
+    border-radius: 1%;
+    border-right: 5px ridge #155263;
+}
+
+.border-left{
+    border-radius: 1%;
+    border-left: 5px ridge #155263;
+}
+
+.button.button-sandy,
+.button.button-sandy{
+    background-color: #155263;
+    color:white;
+    border-color:#155263;
+}
