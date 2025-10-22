@@ -1,103 +1,155 @@
 
 
-import { select, scaleLinear, line, axisLeft, axisTop, selectAll } from "d3";
+import { select, scaleLinear, line, axisLeft, axisTop, selectAll, ScaleLinear, axisBottom } from "d3";
+import { jres } from "./models";
 
-export function get_grapher(
-    
+export class grapher{
+    static increment:number = 0x6c4a33;
+    static w:number =window.innerWidth*0.60;
+    static leg_h:number = window.innerHeight*0.15;
+    static m:number=50;
+    static h:number = window.innerHeight*0.35;
+    static GRAPH_SVG:string = "graph-svg";
+    static PARENT_G:string="parent-g";
 
-    
-    base,
-    x_grid,
-    y_grid,
-    x_offset,
-    y_offset,
-    x_period,
-    y_period
-){
-    const increment = 0x6c4a33;
-    const w =window.innerWidth*0.6;
-    const m=50;
-    const h = window.innerHeight*0.75;
-    const size = 301;
-    const leg = select("#graph-legend")
-    const xScale = scaleLinear()
-    .domain([0, size - 1])
-    .range([0, w]);
+    //calculated in ctor
+    nxt_clr:number;
+    x_grid:number;
+    y_grid:number;
+    x_offset:number;
+    y_offset:number;
+    x_period:number;
+    y_period:number;
+    x_scale:ScaleLinear<number,number,never>
+    y_scale:ScaleLinear<number,number,never>
+    x_max:number;
+    y_max:number;
+    y_min:number;
 
-    const yScale = scaleLinear().domain([-size+1, size-1]).range([h, 0]);
+    constructor(
+        dataset:jres,
+        private idx:number = idx,
+        private prefix:string = prefix,
+    ){
+        this.clear_graph_area();
 
-    function prep_graph_area() {
-    const x_axis = select<SVGGElement,unknown>(`#x-axis`)
-    const y_axis = select<SVGGElement,unknown>(`#y-axis`)
+        this.nxt_clr = 0xf9a825;
+        this.x_grid=0;
+        this.y_grid=0;
+        this.x_offset=10;
+        this.y_offset=10;
+        this.x_period=6
+        this.y_period=6
 
-    x_axis
-        .call(axisTop(xScale).tickValues(xScale.ticks().filter(t=>t!==0)).tickSize(-2*h))
-        .attr("transform",`translate(${m},${(h/2)})`)
+        this.x_max = 0
+        this.y_min = 0;
+        this.y_max = Object.values(dataset).reduce((n:number,v:number[])=>{
+            const arr = grapher.to_arr(v).filter(_n=>isFinite(_n))
+            const m = Math.max(...arr);
+            const min = Math.min(...arr);
+            console.log(this.prefix+": "+m)
+            if(min < this.y_min) this.y_min = min;
+            if(m>n) return m;
+            if(v.length>this.x_max) this.x_max = v.length;
+            
+            return n;
+        },0)/1e3
 
-    selectAll(".tick line")
-    .attr("transform",`translate(0,${-h/2})`)
-    y_axis
-        .attr("transform",`translate(${m},0)`)
-        .call(axisLeft(yScale).tickSize(-w).tickSizeOuter(0))
+        this.x_scale = scaleLinear()
+            .domain([0, this.x_max - 1])
+            .range([0, grapher.w]);
+
+        this.y_scale = scaleLinear().domain([this.y_min, this.y_max]).range([grapher.h, 0]);
+        this.prep_graph_area()
+        Object.entries(dataset).slice(0,30).forEach(([k,v])=>{
+            this.draw_graph(v);
+            this.add_to_legend(k);
+        });
     }
 
-    function clear_graph_area() {
-    const p = select(`#graph-svg`).select("#parent-g").remove();
-    select(`#graph-svg`).append("g").attr("id", "parent-g");
+    prep_graph_area() {
+        const x_axis = select<SVGGElement,unknown>(`#${this.axis_id("x")}`)
+        const y_axis = select<SVGGElement,unknown>(`#${this.axis_id("y")}`)
+        console.log(document.getElementById(this.legend_id())!.getAttribute("height"))
+        x_axis
+            .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(t=>t!==0)).tickSize(-2*grapher.h))
+            .attr("transform",`translate(${grapher.m},${grapher.h})`)
+        
+        x_axis.selectAll(".tick line")
+        y_axis
+            .attr("transform",`translate(${grapher.m},0)`)
+            .call(axisLeft(this.y_scale).tickSize(-grapher.w).tickSizeOuter(0))
+    }
+
+    clear_graph_area() {
+        select("#"+this.legend_id()).selectAll("*").remove();
+        const svgid = this.svg_id();
+        const parentgid = this.parent_g_id();
+        select("#"+svgid)
+            .select("#"+parentgid)
+            .remove();
+        select("#"+svgid)
+            .append("g")
+            .attr("id",parentgid)
     } 
 
-    const x: number[] = Array.from(Array(size), (_, idx) => idx);
-
-    function draw_graph(y: number[], max: number) {
-    const data: [number, number][] = x.map((_x, _i) => [
-        _x,
-        (y[_i] * (size - 1)) / max,
-    ]);
-    const parent_g = select("#parent-g");
-    const lin = line()
-        .x((d) => xScale(d[0]))
-        .y((d) => yScale(d[1]));
-
-    parent_g
-        .append("path")
-        .datum(data)
-        .attr("class", "line")
-        .attr("d", lin)
-        .attr("transform", `translate(50, 0)`)
-        .attr("stroke", "#" + base.toString(16).padStart(6, "0").toUpperCase())
-        .attr("fill", "none");
-    base = (base + increment) % 0xffffff;
+    draw_graph(y: number[]) {
+        const data: [number, number][] = y.map((_y, _i) => [
+            _i,
+            _y,
+        ]);
+        const parent_g = select("#"+this.svg_id())
+            .select("#"+this.parent_g_id());
+        const lin = line()
+            .x((d) => this.x_scale(d[0]))
+            .y((d) => this.y_scale(d[1]));
+        parent_g
+            .append("path")
+            .datum(data)
+            .attr("class", "line")
+            .attr("d", lin)
+            .attr("transform", `translate(50, 0)`)
+            .attr("stroke", "#" + this.nxt_clr.toString(16).padStart(6, "0").toUpperCase())
+            .attr("fill", "none");
+        this.nxt_clr = (this.nxt_clr + grapher.increment) % 0xffffff;
     }
 
-    function legend(
-    k:string,
-    color:string,
-    idx:number
+    add_to_legend(
+        k:string,
     ){
-    // Handmade legend
-    leg.append("circle").attr("cx",x_offset+220*x_grid).attr("cy",y_offset+25*y_grid).attr("r", 6).style("fill", color)
-    leg.append("text").attr("x", x_offset+220*x_grid+10).attr("y", y_offset+25*y_grid+3).text(k).style("font-size", "15px").attr("alignment-baseline","middle")
-    y_grid = (y_grid+1) % y_period;
-    if(y_grid === 0){
-        x_grid = (x_grid+1) % x_period;
-    }
-    }
-
-    function to_arr(v: object) {
-    return Object.entries(v).reduce(
-        (arr, [k, v]) => {
-        arr[parseInt(k)] = v;
-        return arr;
-        },
-        Array(Object.keys(v).length).fill(0),
-    );
+        const leg = select("#"+this.legend_id());
+        const color = '#'+this.nxt_clr.toString(16).padStart(6, "0").toUpperCase();
+        leg.append("circle").attr("cx",this.x_offset+250*this.x_grid).attr("cy",this.y_offset+25*this.y_grid).attr("r", 6).style("fill", color)
+        leg.append("text").attr("x", this.x_offset+250*this.x_grid+10).attr("y", this.y_offset+25*this.y_grid+3).text(k).style("font-size", "15px").attr("alignment-baseline","middle")
+        this.y_grid = (this.y_grid+1) % this.y_period;
+        if(this.y_grid === 0){
+            this.x_grid++;
+        }
     }
 
-    return {
-        clear_graph_area:clear_graph_area,
-        prep_graph_area:prep_graph_area,
-        to_arr:to_arr,
-        legend:legend,
-        draw_graph:draw_graph
+    svg_id():string{
+        return [this.prefix,"graph-svg"].join("-");
+    }
+
+    parent_g_id():string{
+        return [this.prefix,"parent-g"].join("-");
+    }
+
+    axis_id(axis:"x"|"y"){
+        return [this.prefix,axis,"axis"].join("-");
+    }
+
+    legend_id(){
+        return [this.prefix,"graph-legend"].join("-")
+    }
+
+    static to_arr(v: object) {
+        return Object.entries(v).reduce(
+            (arr, [k, v]) => {
+            arr[parseInt(k)] = v;
+            return arr;
+            },
+            Array(Object.keys(v).length).fill(0),
+        );
     }
 }

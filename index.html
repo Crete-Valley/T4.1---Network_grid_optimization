@@ -8,10 +8,6 @@
         <div class="column column-20" id="status-column">
           <h3 id="status-header">Starting status header</h3>
         </div>
-      <div class="column column-80" id="legend-column">
-        <svg id="graph-legend">
-        </svg>
-      </div>
       </div>
        <div class="row" id="work-row">
         <div class="column column-20" id="sidebar-column">
@@ -114,14 +110,29 @@
             <ul id="res-list">
             </ul>
         </div>
-        <div class="column column-70" id="graph-column">
-          <svg id="graph-svg">
-            <g id="x-axis"></g>
-            <g id="y-axis"></g>
-            <g id="parent-g"></g>
-        </svg>
+        <div class="column column-70 border-top border-bottom border-left border-right" id="graph-column">
+          <svg id="bus-graph-svg">
+            <g id="bus-x-axis"></g>
+            <g id="bus-y-axis"></g>
+            <g id="bus-parent-g"></g>
+          </svg>
+          <svg id="bus-graph-legend">
+          </svg>
+          <svg id="line-graph-svg">
+            <g id="line-x-axis"></g>
+            <g id="line-y-axis"></g>
+            <g id="line-parent-g"></g>
+          </svg>
+          <svg id="line-graph-legend">
+          </svg>
+          <svg id="transformer-graph-svg">
+            <g id="transformer-x-axis"></g>
+            <g id="transformer-y-axis"></g>
+            <g id="transformer-parent-g"></g>
+          </svg>
+          <svg id="transformer-graph-legend">
+          </svg>
         </div>
-
        </div>
     </div>
   </body>

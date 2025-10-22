@@ -88,7 +88,7 @@ async function postproc_lines(result:jres){
             })
 
             //add to new result
-            loadings[compname+'_%L'] = comb
+            loadings[compname+'_%I'] = comb
         }
     }
     return loadings
@@ -102,12 +102,12 @@ async function postproc_transformers(result:jres){
     const transformers = rating.getWorksheet("transformer")!
     const tnames = transformers.getColumn(1).values
     let loadings:jres = {}
-    const r:RegExp = new RegExp(/^trf_.*_Pinj$/)
+    const r:RegExp = new RegExp(/^trf_.*_P_(0|1)$/)
     for(const [k,v] of Object.entries(result)){
         if (r.test(k)){
 
             //n==pinj directly in this case
-            const compname = k.slice(0,k.indexOf('_Pinj'))
+            const compname = k.slice(0,k.indexOf('_P'))
 
             //get Prated from sheet
             const tidx = tnames.indexOf(compname)
@@ -123,7 +123,7 @@ async function postproc_transformers(result:jres){
             })
 
             //add to new result
-            loadings[compname+'_%L'] = comb
+            loadings[compname+'_%P'] = comb
         }
     }
     return loadings
@@ -164,8 +164,8 @@ async function postproc_busses(result:jres){
                 }
 
             })
-            loadings[compname+'_bus_V_mag'] = combm
-            loadings[compname+'_bus_V_phase'] = combp
+            loadings[compname+'_%V_mag'] = combm
+            loadings[compname+'_V_phase'] = combp
         }else if(sr.test(k)){
             //Here push im as q and re as p directly
 
@@ -185,8 +185,8 @@ async function postproc_busses(result:jres){
                     combq.push(othern/1e6)
                 }
             })
-            loadings[compname+'_bus_P'] = combp
-            loadings[compname+'_bus_Q'] = combq
+            loadings[compname+'_P'] = combp
+            loadings[compname+'_Q'] = combq
         }
     }
     return loadings
@@ -195,8 +195,8 @@ async function postproc_busses(result:jres){
 
 export async function postproc_wratings(result:jres){
     return {
-        "bus":await postproc_busses(result),
-        "transformer":await postproc_transformers(result),
-        "line":await postproc_lines(result)
+        "bus":await postproc_busses(structuredClone(result)),
+        "transformer":await postproc_transformers(structuredClone(result)),
+        "line":await postproc_lines(structuredClone(result))
     };
 }

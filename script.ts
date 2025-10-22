@@ -1,35 +1,7 @@
 import { defaults, jres } from "./src/models";
 import { mkapi } from "./src/api";
-import {get_grapher} from "./src/graph";
-import { add_local, preproc } from "./src/workbooks";
-
-
-
-
-    
-let base = 0xf9a825;
-let x_grid=0;
-let y_grid=0;
-let x_offset=10;
-let y_offset=10;
-let x_period=6
-let y_period=6
-
-const {
-  clear_graph_area,
-  draw_graph,
-  prep_graph_area,
-  to_arr,
-  legend,
-} = get_grapher(
-  base,
-  x_grid,
-  y_grid,
-  x_offset,
-  y_offset,
-  x_period,
-  y_period
-)
+import {grapher} from "./src/graph";
+import { add_local, postproc_wratings, preproc } from "./src/workbooks";
 
 type api = ReturnType<typeof mkapi>;
 
@@ -66,20 +38,15 @@ function mkbuilder(api: api) {
       if (target && target.value) {
         const sim_name = target.value;
         try {
-          const res = Object.entries(Object.values(await api.get_result(sim_name))[0] as jres).slice(0,35);
+          const res = Object.entries(
+            Object.values(await api.get_result(sim_name))[0] as jres
+          ).reduce((obj,[k,v])=>{
+            return {...obj,[k.trimStart()]:v}
+          },{})
           status.innerText = `\nSuccessfully fetched ${sim_name} result`;
-          clear_graph_area()
-          x_grid = 0;
-          y_grid=0;
-          const max = res.reduce((n:number,[k,v])=>{
-            const m = Math.max(...to_arr(v))
-            if(m>n) return m
-            return n
-          },0)
-          res.forEach(([k,v],i)=>{
-            if(k.trim() === "time") return
-            draw_graph(to_arr(v),max)
-            legend(k,'#'+base.toString(16).padStart(6, "0").toUpperCase(),i)
+          const loadings = await postproc_wratings(res);
+          Object.entries(loadings).forEach(([k,v],i)=>{
+            new grapher(v,i,k);
           })
         } catch (e) {
           status.innerText = `\nError fetching result:\n ${e}`;
@@ -156,7 +123,7 @@ function mkbuilder(api: api) {
       );
       if (file_input && file_input.files) {
         const pre_file: File = file_input.files[0];
-        const scenario:number = Number(<HTMLInputElement>document.getElementById("scenario-input")!.value)
+        const scenario:number = Number((document.getElementById("scenario-input") as HTMLInputElement).value)
         const file = await preproc(scenario,pre_file);
         try {
           await api.upfile(file, "ts/profile",pre_file.name);
@@ -188,10 +155,6 @@ builder.mkratingform(elems.ratingform)
 builder.mksimform(elems.simform,elems.status)
 builder.mkresform(elems.resform, elems.status);
 
-
-prep_graph_area();
-
-
 setInterval(()=>{
   api.get_results()
     .then((res)=>{
@@ -204,3 +167,11 @@ setInterval(()=>{
       coerce.forEach(l=>elems.reslist.appendChild(l))
     })
 },3000)
+
+
+
+
+/*
+
+
+          */

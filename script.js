@@ -18,6 +18,17 @@
     /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
     function __awaiter(thisArg, _arguments, P, generator) {
         function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
         return new (P || (P = Promise))(function (resolve, reject) {
@@ -441,8 +452,8 @@
       return axis;
     }
 
-    function axisTop(scale) {
-      return axis(top, scale);
+    function axisBottom(scale) {
+      return axis(bottom, scale);
     }
 
     function axisLeft(scale) {
@@ -1454,12 +1465,6 @@
       return typeof selector === "string"
           ? new Selection$1([[document.querySelector(selector)]], [document.documentElement])
           : new Selection$1([[selector]], root);
-    }
-
-    function selectAll(selector) {
-      return typeof selector === "string"
-          ? new Selection$1([document.querySelectorAll(selector)], [document.documentElement])
-          : new Selection$1([array$1(selector)], root);
     }
 
     function define(constructor, factory, prototype) {
@@ -4030,77 +4035,129 @@
 
     Transform.prototype;
 
-    function get_grapher(base, x_grid, y_grid, x_offset, y_offset, x_period, y_period) {
-        var increment = 0x6c4a33;
-        var w = window.innerWidth * 0.6;
-        var m = 50;
-        var h = window.innerHeight * 0.75;
-        var size = 301;
-        var leg = select("#graph-legend");
-        var xScale = linear()
-            .domain([0, size - 1])
-            .range([0, w]);
-        var yScale = linear().domain([-size + 1, size - 1]).range([h, 0]);
-        function prep_graph_area() {
-            var x_axis = select("#x-axis");
-            var y_axis = select("#y-axis");
+    var grapher = /** @class */ (function () {
+        function grapher(dataset, idx, prefix) {
+            if (idx === void 0) { idx = idx; }
+            if (prefix === void 0) { prefix = prefix; }
+            var _this = this;
+            this.idx = idx;
+            this.prefix = prefix;
+            this.clear_graph_area();
+            this.nxt_clr = 0xf9a825;
+            this.x_grid = 0;
+            this.y_grid = 0;
+            this.x_offset = 10;
+            this.y_offset = 10;
+            this.x_period = 6;
+            this.y_period = 6;
+            this.x_max = 0;
+            this.y_min = 0;
+            this.y_max = Object.values(dataset).reduce(function (n, v) {
+                var arr = grapher.to_arr(v).filter(function (_n) { return isFinite(_n); });
+                var m = Math.max.apply(Math, arr);
+                var min = Math.min.apply(Math, arr);
+                console.log(_this.prefix + ": " + m);
+                if (min < _this.y_min)
+                    _this.y_min = min;
+                if (m > n)
+                    return m;
+                if (v.length > _this.x_max)
+                    _this.x_max = v.length;
+                return n;
+            }, 0) / 1e3;
+            this.x_scale = linear()
+                .domain([0, this.x_max - 1])
+                .range([0, grapher.w]);
+            this.y_scale = linear().domain([this.y_min, this.y_max]).range([grapher.h, 0]);
+            this.prep_graph_area();
+            Object.entries(dataset).slice(0, 30).forEach(function (_a) {
+                var k = _a[0], v = _a[1];
+                _this.draw_graph(v);
+                _this.add_to_legend(k);
+            });
+        }
+        grapher.prototype.prep_graph_area = function () {
+            var x_axis = select("#".concat(this.axis_id("x")));
+            var y_axis = select("#".concat(this.axis_id("y")));
+            console.log(document.getElementById(this.legend_id()).getAttribute("height"));
             x_axis
-                .call(axisTop(xScale).tickValues(xScale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * h))
-                .attr("transform", "translate(".concat(m, ",").concat((h / 2), ")"));
-            selectAll(".tick line")
-                .attr("transform", "translate(0,".concat(-h / 2, ")"));
+                .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * grapher.h))
+                .attr("transform", "translate(".concat(grapher.m, ",").concat(grapher.h, ")"));
+            x_axis.selectAll(".tick line");
             y_axis
-                .attr("transform", "translate(".concat(m, ",0)"))
-                .call(axisLeft(yScale).tickSize(-w).tickSizeOuter(0));
-        }
-        function clear_graph_area() {
-            select("#graph-svg").select("#parent-g").remove();
-            select("#graph-svg").append("g").attr("id", "parent-g");
-        }
-        var x = Array.from(Array(size), function (_, idx) { return idx; });
-        function draw_graph(y, max) {
-            var data = x.map(function (_x, _i) { return [
-                _x,
-                (y[_i] * (size - 1)) / max,
+                .attr("transform", "translate(".concat(grapher.m, ",0)"))
+                .call(axisLeft(this.y_scale).tickSize(-grapher.w).tickSizeOuter(0));
+        };
+        grapher.prototype.clear_graph_area = function () {
+            select("#" + this.legend_id()).selectAll("*").remove();
+            var svgid = this.svg_id();
+            var parentgid = this.parent_g_id();
+            select("#" + svgid)
+                .select("#" + parentgid)
+                .remove();
+            select("#" + svgid)
+                .append("g")
+                .attr("id", parentgid);
+        };
+        grapher.prototype.draw_graph = function (y) {
+            var _this = this;
+            var data = y.map(function (_y, _i) { return [
+                _i,
+                _y,
             ]; });
-            var parent_g = select("#parent-g");
+            var parent_g = select("#" + this.svg_id())
+                .select("#" + this.parent_g_id());
             var lin = line()
-                .x(function (d) { return xScale(d[0]); })
-                .y(function (d) { return yScale(d[1]); });
+                .x(function (d) { return _this.x_scale(d[0]); })
+                .y(function (d) { return _this.y_scale(d[1]); });
             parent_g
                 .append("path")
                 .datum(data)
                 .attr("class", "line")
                 .attr("d", lin)
                 .attr("transform", "translate(50, 0)")
-                .attr("stroke", "#" + base.toString(16).padStart(6, "0").toUpperCase())
+                .attr("stroke", "#" + this.nxt_clr.toString(16).padStart(6, "0").toUpperCase())
                 .attr("fill", "none");
-            base = (base + increment) % 0xffffff;
-        }
-        function legend(k, color, idx) {
-            // Handmade legend
-            leg.append("circle").attr("cx", x_offset + 220 * x_grid).attr("cy", y_offset + 25 * y_grid).attr("r", 6).style("fill", color);
-            leg.append("text").attr("x", x_offset + 220 * x_grid + 10).attr("y", y_offset + 25 * y_grid + 3).text(k).style("font-size", "15px").attr("alignment-baseline", "middle");
-            y_grid = (y_grid + 1) % y_period;
-            if (y_grid === 0) {
-                x_grid = (x_grid + 1) % x_period;
+            this.nxt_clr = (this.nxt_clr + grapher.increment) % 0xffffff;
+        };
+        grapher.prototype.add_to_legend = function (k) {
+            var leg = select("#" + this.legend_id());
+            var color = '#' + this.nxt_clr.toString(16).padStart(6, "0").toUpperCase();
+            leg.append("circle").attr("cx", this.x_offset + 250 * this.x_grid).attr("cy", this.y_offset + 25 * this.y_grid).attr("r", 6).style("fill", color);
+            leg.append("text").attr("x", this.x_offset + 250 * this.x_grid + 10).attr("y", this.y_offset + 25 * this.y_grid + 3).text(k).style("font-size", "15px").attr("alignment-baseline", "middle");
+            this.y_grid = (this.y_grid + 1) % this.y_period;
+            if (this.y_grid === 0) {
+                this.x_grid++;
             }
-        }
-        function to_arr(v) {
+        };
+        grapher.prototype.svg_id = function () {
+            return [this.prefix, "graph-svg"].join("-");
+        };
+        grapher.prototype.parent_g_id = function () {
+            return [this.prefix, "parent-g"].join("-");
+        };
+        grapher.prototype.axis_id = function (axis) {
+            return [this.prefix, axis, "axis"].join("-");
+        };
+        grapher.prototype.legend_id = function () {
+            return [this.prefix, "graph-legend"].join("-");
+        };
+        grapher.to_arr = function (v) {
             return Object.entries(v).reduce(function (arr, _a) {
                 var k = _a[0], v = _a[1];
                 arr[parseInt(k)] = v;
                 return arr;
             }, Array(Object.keys(v).length).fill(0));
-        }
-        return {
-            clear_graph_area: clear_graph_area,
-            prep_graph_area: prep_graph_area,
-            to_arr: to_arr,
-            legend: legend,
-            draw_graph: draw_graph
         };
-    }
+        grapher.increment = 0x6c4a33;
+        grapher.w = window.innerWidth * 0.60;
+        grapher.leg_h = window.innerHeight * 0.15;
+        grapher.m = 50;
+        grapher.h = window.innerHeight * 0.35;
+        grapher.GRAPH_SVG = "graph-svg";
+        grapher.PARENT_G = "parent-g";
+        return grapher;
+    }());
 
     var rating = undefined;
     function add_local(file) {
@@ -4185,15 +4242,180 @@
             });
         });
     }
+    function postproc_lines(result) {
+        return __awaiter(this, void 0, void 0, function () {
+            var lines, lnames, loadings, r, _loop_1, _i, _a, _b, k, v;
+            return __generator(this, function (_c) {
+                if (!rating) {
+                    throw new Error("No line rating file provided");
+                }
+                lines = rating.getWorksheet("line");
+                lnames = lines.getColumn(1).values;
+                loadings = {};
+                r = new RegExp(/^lne_.*_I_\d\.(im|re)$/);
+                _loop_1 = function (k, v) {
+                    if (r.test(k)) {
+                        //find other complex coefficients
+                        var otherk = k.endsWith(".im") ? k.replace("im", "re") : k.replace("re", "im");
+                        var otherv_1 = result[otherk];
+                        var compname = k.slice(0, k.indexOf('_I_'));
+                        var comb_1 = [];
+                        var lidx = lnames.indexOf(compname);
+                        if (lidx === -1) {
+                            return "continue";
+                        }
+                        //get Inom from sheet
+                        var inom_1 = lines.getRow(lidx + 1).getCell(2).value * 1e3;
+                        //map values
+                        Object.values(v).forEach(function (n, i) {
+                            //calculate magnitude in this case
+                            var mag = Math.sqrt(Math.pow(n, 2) + Math.pow(otherv_1[i], 2));
+                            comb_1.push(100 * mag / inom_1);
+                        });
+                        //add to new result
+                        loadings[compname + '_%I'] = comb_1;
+                    }
+                };
+                for (_i = 0, _a = Object.entries(result); _i < _a.length; _i++) {
+                    _b = _a[_i], k = _b[0], v = _b[1];
+                    _loop_1(k, v);
+                }
+                return [2 /*return*/, loadings];
+            });
+        });
+    }
+    //P/Prated in percent for transformers
+    function postproc_transformers(result) {
+        return __awaiter(this, void 0, void 0, function () {
+            var transformers, tnames, loadings, r, _loop_2, _i, _a, _b, k, v;
+            return __generator(this, function (_c) {
+                if (!rating) {
+                    throw new Error("No transformer ratings file provided");
+                }
+                transformers = rating.getWorksheet("transformer");
+                tnames = transformers.getColumn(1).values;
+                loadings = {};
+                r = new RegExp(/^trf_.*_P_(0|1)$/);
+                _loop_2 = function (k, v) {
+                    if (r.test(k)) {
+                        //n==pinj directly in this case
+                        var compname = k.slice(0, k.indexOf('_P'));
+                        //get Prated from sheet
+                        var tidx = tnames.indexOf(compname);
+                        if (tidx === -1) {
+                            return "continue";
+                        }
+                        var prated_1 = transformers.getRow(tidx + 1).getCell(2).value * 1e6;
+                        var comb_2 = [];
+                        //map values
+                        Object.values(v).forEach(function (n) {
+                            comb_2.push(100 * Math.abs(n / prated_1));
+                        });
+                        //add to new result
+                        loadings[compname + '_%P'] = comb_2;
+                    }
+                };
+                for (_i = 0, _a = Object.entries(result); _i < _a.length; _i++) {
+                    _b = _a[_i], k = _b[0], v = _b[1];
+                    _loop_2(k, v);
+                }
+                return [2 /*return*/, loadings];
+            });
+        });
+    }
+    function postproc_busses(result) {
+        return __awaiter(this, void 0, void 0, function () {
+            var busses, bnames, loadings, vr, sr, _loop_3, _i, _a, _b, k, v;
+            return __generator(this, function (_c) {
+                if (!rating) {
+                    throw new Error("No bus rating file provided");
+                }
+                busses = rating.getWorksheet("bus");
+                bnames = busses.getColumn(1).values;
+                loadings = {};
+                vr = new RegExp(/_V.(im|re)$/);
+                sr = new RegExp(/_S.(im|re)$/);
+                _loop_3 = function (k, v) {
+                    if (vr.test(k)) {
+                        //This calculation is similar to a combination between transformer and line ratings
+                        //calculation
+                        var isimaginary_1 = k.endsWith(".im");
+                        var otherk = isimaginary_1 ? k.replace("im", "re") : k.replace("re", "im");
+                        var otherv_2 = result[otherk];
+                        var compname_1 = k.slice(0, k.indexOf('_V'));
+                        var combm_1 = [];
+                        var combp_1 = [];
+                        Object.values(v).forEach(function (n, i) {
+                            var othern = otherv_2[i];
+                            //use atan2 to avoid y/x sign edge case shennanigans
+                            var mag = Math.sqrt(Math.pow(n, 2) + Math.pow(othern, 2));
+                            var phase = isimaginary_1 ? Math.atan2(n, othern) : Math.atan2(othern, n);
+                            combp_1.push(phase);
+                            var bidx = bnames.indexOf(compname_1);
+                            if (bidx !== -1) {
+                                var vnom = busses.getRow(bidx + 1).getCell(2).value * 1e3;
+                                combm_1.push(mag / vnom);
+                            }
+                        });
+                        loadings[compname_1 + '_%V_mag'] = combm_1;
+                        loadings[compname_1 + '_V_phase'] = combp_1;
+                    }
+                    else if (sr.test(k)) {
+                        //Here push im as q and re as p directly
+                        var isimaginary_2 = k.endsWith(".im");
+                        var otherk = isimaginary_2 ? k.replace("im", "re") : k.replace("re", "im");
+                        var otherv_3 = result[otherk];
+                        var compname = k.slice(0, k.indexOf('_V'));
+                        var combp_2 = [];
+                        var combq_1 = [];
+                        Object.values(v).forEach(function (n, i) {
+                            var othern = otherv_3[i];
+                            if (isimaginary_2) {
+                                combq_1.push(n / 1e6);
+                                combp_2.push(othern / 1e6);
+                            }
+                            else {
+                                combp_2.push(n / 1e6);
+                                combq_1.push(othern / 1e6);
+                            }
+                        });
+                        loadings[compname + '_P'] = combp_2;
+                        loadings[compname + '_Q'] = combq_1;
+                    }
+                };
+                for (_i = 0, _a = Object.entries(result); _i < _a.length; _i++) {
+                    _b = _a[_i], k = _b[0], v = _b[1];
+                    _loop_3(k, v);
+                }
+                return [2 /*return*/, loadings];
+            });
+        });
+    }
+    function postproc_wratings(result) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, _b, _c;
+            var _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        _d = {};
+                        _a = "bus";
+                        return [4 /*yield*/, postproc_busses(structuredClone(result))];
+                    case 1:
+                        _d[_a] = _e.sent();
+                        _b = "transformer";
+                        return [4 /*yield*/, postproc_transformers(structuredClone(result))];
+                    case 2:
+                        _d[_b] = _e.sent();
+                        _c = "line";
+                        return [4 /*yield*/, postproc_lines(structuredClone(result))];
+                    case 3: return [2 /*return*/, (_d[_c] = _e.sent(),
+                            _d)];
+                }
+            });
+        });
+    }
 
-    var base = 0xf9a825;
-    var x_grid = 0;
-    var y_grid = 0;
-    var x_offset = 10;
-    var y_offset = 10;
-    var x_period = 6;
-    var y_period = 6;
-    var _a = get_grapher(base, x_grid, y_grid, x_offset, y_offset, x_period, y_period), clear_graph_area = _a.clear_graph_area, draw_graph = _a.draw_graph, prep_graph_area = _a.prep_graph_area, to_arr = _a.to_arr, legend = _a.legend;
     function mkbuilder(api) {
         var elems = function () {
             var status = (document.getElementById("status-header"));
@@ -4218,46 +4440,40 @@
         function mkresform(resform, status) {
             var _this = this;
             resform.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
-                var target, sim_name, res, _a, _b, _c, _d, max_1, e_1;
+                var target, sim_name, res, _a, _b, _c, _d, loadings, e_1;
                 return __generator(this, function (_e) {
                     switch (_e.label) {
                         case 0:
                             ev.preventDefault();
                             target = (document.getElementById("res-input"));
-                            if (!(target && target.value)) return [3 /*break*/, 4];
+                            if (!(target && target.value)) return [3 /*break*/, 5];
                             sim_name = target.value;
                             _e.label = 1;
                         case 1:
-                            _e.trys.push([1, 3, , 4]);
+                            _e.trys.push([1, 4, , 5]);
                             _b = (_a = Object).entries;
                             _d = (_c = Object).values;
                             return [4 /*yield*/, api.get_result(sim_name)];
                         case 2:
-                            res = _b.apply(_a, [_d.apply(_c, [_e.sent()])[0]]).slice(0, 35);
-                            status.innerText = "\nSuccessfully fetched ".concat(sim_name, " result");
-                            clear_graph_area();
-                            x_grid = 0;
-                            y_grid = 0;
-                            max_1 = res.reduce(function (n, _a) {
-                                _a[0]; var v = _a[1];
-                                var m = Math.max.apply(Math, to_arr(v));
-                                if (m > n)
-                                    return m;
-                                return n;
-                            }, 0);
-                            res.forEach(function (_a, i) {
+                            res = _b.apply(_a, [_d.apply(_c, [_e.sent()])[0]]).reduce(function (obj, _a) {
+                                var _b;
                                 var k = _a[0], v = _a[1];
-                                if (k.trim() === "time")
-                                    return;
-                                draw_graph(to_arr(v), max_1);
-                                legend(k, '#' + base.toString(16).padStart(6, "0").toUpperCase(), i);
-                            });
-                            return [3 /*break*/, 4];
+                                return __assign(__assign({}, obj), (_b = {}, _b[k.trimStart()] = v, _b));
+                            }, {});
+                            status.innerText = "\nSuccessfully fetched ".concat(sim_name, " result");
+                            return [4 /*yield*/, postproc_wratings(res)];
                         case 3:
+                            loadings = _e.sent();
+                            Object.entries(loadings).forEach(function (_a, i) {
+                                var k = _a[0], v = _a[1];
+                                new grapher(v, i, k);
+                            });
+                            return [3 /*break*/, 5];
+                        case 4:
                             e_1 = _e.sent();
                             status.innerText = "\nError fetching result:\n ".concat(e_1);
-                            return [3 /*break*/, 4];
-                        case 4: return [2 /*return*/];
+                            return [3 /*break*/, 5];
+                        case 5: return [2 /*return*/];
                     }
                 });
             }); };
@@ -4385,7 +4601,6 @@
     builder.mkratingform(elems.ratingform);
     builder.mksimform(elems.simform, elems.status);
     builder.mkresform(elems.resform, elems.status);
-    prep_graph_area();
     setInterval(function () {
         api.get_results()
             .then(function (res) {
@@ -4398,5 +4613,9 @@
             coerce.forEach(function (l) { return elems.reslist.appendChild(l); });
         });
     }, 3000);
+    /*
+
+
+              */
 
 })();
