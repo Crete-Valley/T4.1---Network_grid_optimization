@@ -22,20 +22,53 @@ body{
     width: 100vw;
 }
 
-#graph-legend{
-    height:100%;
-    width:100%
-}
-
 #res-heading{
     text-align:center
 }
 
-
-#graph-svg{
-    height:100%;
+#bus-graph-svg{
+    margin-top:10px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:40vh;
     width:100%;
 }
+
+#bus-graph-legend{
+    margin-left:2vw;
+    height:18vh;
+    width:100%;
+    overflow-X:scroll;
+}
+
+#line-graph-svg{
+    margin-top:10px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:40vh;
+    width:100%;
+}
+
+#line-graph-legend{
+    margin-left:2vw;
+    height:18vh;
+    width:100%
+}
+
+#transformer-graph-svg{
+    margin-top:10px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:40vh;
+    width:100%;
+}
+
+#transformer-graph-legend{
+    margin-left:2vw;
+    height:18vh;
+    width:100%
+}
+
 
 .tick line {
     stroke: #ccc; 
