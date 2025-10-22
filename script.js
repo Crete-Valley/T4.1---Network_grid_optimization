@@ -4153,7 +4153,7 @@
         grapher.w = window.innerWidth * 0.60;
         grapher.leg_h = window.innerHeight * 0.15;
         grapher.m = 50;
-        grapher.h = window.innerHeight * 0.35;
+        grapher.h = window.innerHeight * 0.40;
         grapher.GRAPH_SVG = "graph-svg";
         grapher.PARENT_G = "parent-g";
         return grapher;
