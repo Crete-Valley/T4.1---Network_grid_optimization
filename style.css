@@ -27,46 +27,47 @@ body{
 }
 
 #bus-graph-svg{
-    margin-top:10px;
+    margin-top:5px;
     margin-bottom:5px;
     margin-left:2vw;
-    height:40vh;
+    height:35vh;
     width:100%;
 }
 
 #bus-graph-legend{
     margin-left:2vw;
     height:18vh;
-    width:100%;
+    width:95%;
     overflow-X:scroll;
 }
 
 #line-graph-svg{
-    margin-top:10px;
+    margin-top:5px;
     margin-bottom:5px;
     margin-left:2vw;
-    height:40vh;
+    height:35vh;
     width:100%;
 }
 
 #line-graph-legend{
     margin-left:2vw;
     height:18vh;
-    width:100%
+    width:95%;
 }
 
 #transformer-graph-svg{
-    margin-top:10px;
+    margin-top:5px;
     margin-bottom:5px;
     margin-left:2vw;
-    height:40vh;
+    height:35vh;
     width:100%;
 }
 
 #transformer-graph-legend{
     margin-left:2vw;
+    margin-bottom:5px;
     height:18vh;
-    width:100%
+    width:95%;
 }
 
 
@@ -80,6 +81,11 @@ body{
     stroke-opacity:0;
 }
 
+.border-all{
+    border-radius: 1%;
+    opacity:80%;
+    border: 2px ridge #155263;
+}
 
 .border-bottom{
     border-radius: 1%;

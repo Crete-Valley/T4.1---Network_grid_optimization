@@ -8,7 +8,7 @@ export class grapher{
     static w:number =window.innerWidth*0.60;
     static leg_h:number = window.innerHeight*0.15;
     static m:number=50;
-    static h:number = window.innerHeight*0.35;
+    static h:number = window.innerHeight*0.40;
     static GRAPH_SVG:string = "graph-svg";
     static PARENT_G:string="parent-g";
 
