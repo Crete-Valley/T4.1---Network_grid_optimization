@@ -1,6 +1,7 @@
 body{
     margin:0;
     padding:0;
+    width:50vw;
 }
 
 #main{
@@ -14,9 +15,17 @@ body{
     height:25vh;
 }
 
-#status-column{
-    text-align:left;
+#res-list{
+    overflow-y: scroll;
+    max-height: 100%;
 }
+
+#status-column{
+    justify-content: center;
+    align-items: center;
+    display:flex;
+}
+
 
 #work-row{
     width: 100vw;
@@ -31,7 +40,7 @@ body{
     margin-bottom:5px;
     margin-left:2vw;
     height:35vh;
-    width:100%;
+    width:95%;
 }
 
 #bus-graph-legend{
@@ -46,7 +55,7 @@ body{
     margin-bottom:5px;
     margin-left:2vw;
     height:35vh;
-    width:100%;
+    width:95%;
 }
 
 #line-graph-legend{
@@ -60,7 +69,7 @@ body{
     margin-bottom:5px;
     margin-left:2vw;
     height:35vh;
-    width:100%;
+    width:95%;
 }
 
 #transformer-graph-legend{
@@ -70,10 +79,26 @@ body{
     width:95%;
 }
 
+#sim-submit{
+    margin-top: 3vh;
+    margin-left: 1vw;
+}
+
+
+.title-row{
+    margin-bottom:5vh;
+    justify-content: center;
+    align-items: center;
+    display:flex;
+}
+
+#scenario-div{
+    margin-top:1vh;
+}
 
 .tick line {
     stroke: #ccc; 
-    stroke-opacity: 0.3; /* FIX: Changed to 0.3 for higher transparency */
+    stroke-opacity: 0.3;
     shape-rendering: crispEdges;
 }
 
@@ -82,34 +107,46 @@ body{
 }
 
 .border-all{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
     border-radius: 1%;
     opacity:80%;
-    border: 2px ridge #155263;
+    border: 2px ridge #e0e0e0;
 }
 
 .border-bottom{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
     border-radius: 1%;
-    border-bottom: 5px ridge #155263;
+    border-bottom: 2px ridge #e0e0e0;
 }
 
 .border-top{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
     border-radius: 1%;
-    border-top: 5px ridge #155263;
+    border-top: 2px ridge #e0e0e0;
 }
 
 .border-right{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
     border-radius: 1%;
-    border-right: 5px ridge #155263;
+    border-right: 2px ridge #e0e0e0;
 }
 
 .border-left{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
     border-radius: 1%;
-    border-left: 5px ridge #155263;
+    border-left: 2px ridge #e0e0e0;
 }
 
 .button.button-sandy,
 .button.button-sandy{
     background-color: #155263;
+    max-width: 100%;
+    padding-left:1vw;
     color:white;
     border-color:#155263;
 }

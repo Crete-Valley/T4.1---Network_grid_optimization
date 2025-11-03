@@ -12,8 +12,6 @@ export interface sim {
   name: string;
   freq: number;
   opf: boolean;
-  pppf: boolean;
-  dspf: boolean;
   domain: string;
   solver: string;
   replace_map?: Record<string, string>;
@@ -29,7 +27,5 @@ export const defaults: sim = {
   domain: "SP",
   solver: "NRP",
   opf: false,
-  dspf: false,
-  pppf: false,
   use_xml: "",
 };
