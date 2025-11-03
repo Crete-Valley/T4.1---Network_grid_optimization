@@ -4,14 +4,33 @@
   </head>
   <body>
     <div id="main" class="container">
-      <div class="row" id="meta-row">
-        <div class="column column-20" id="status-column">
-          <h3 id="status-header">Starting status header</h3>
+      <div class="row border-top border-bottom" id="meta-row">
+        <div class="column column-20 border-right" id="status-column">
+            <div class="column column-50" id="res-form-column">
+              <form id="res-form">
+                <label for="res-input"></label>
+                <input id="res-input" type="text"/>
+                <input id="res-submit" type="submit" class="button button-sandy" value="Display Result">
+              </form>
+            </div>
+            <div class="column column-50" id="res-list-column">
+              <h6 id="res-heading">Results</h6>
+              <ul id="res-list">
+              </ul>
+            </div>
+        </div>
+        <div class="column column-80 border-left">
+          <div class="row title-row">
+            <h3>Power System Simulation</h3>
+          </div>
+          <div class="row title-row">
+            <h3 id="status-header">Ready</h3>
+          </div>
         </div>
       </div>
        <div class="row" id="work-row">
         <div class="column column-20" id="sidebar-column">
-          <form id="sim-form">
+          <form id="sim-form" class="border-top border-bottom">
             <div class="row">
               <div class="column column-50">
                 <label for="duration">Duration</label>
@@ -48,89 +67,73 @@
                 <input id="opf" type="text" name="opf" value="false">
               </div>
               <div class="column column-50">
-                <label for="dspf">DPsim Powerflow</label>
-                <input id="dspf" type="text" name="dspf" value="false">
-              </div>
-            </div>
-            <div class="row">
-              <div class="column column-50">
-                <label for="pppf">PP Powerflow</label>
-                <input id="pppf" type="text" name="pppf" value="false">
-              </div>
-              <div class="column column-50">
                 <label for="use_xml">Use XML</label>
                 <input id="use_xml" type="text" name="use_xml" value="">
               </div>
-              </div>
+            </div>
+            <div class="row">
+            </div>
             <div class="row">
               <div class="column column-50">
                 <label for="use_profile">Use Profile</label>
                 <input id="use_profile" type="text" name="use_profile" value="">
               </div>
+              <div class="column column-50">
+                <input id="sim-submit" type="submit" class="button button-sandy" value="Send Sim"/>
               </div>
-              <div class="row">
-                <div class="column column-offset-25">
-                  <input id="sim-submit" type="submit" class="button button-sandy" value="Send Sim"/>
-                </div>
-            </div>
+              </div>
           </form> 
-          <div class="row">
-            <form id="xml-form">
-              <label for="xml-input"></label>
-              <input id="xml-input" type="file"/>
-              <input id="xml-submit" type="submit" class="button button-sandy" value="Upload XML"/>
-            </form>
-            <form id="rating-form">
-              <label for="rating-input"></label>
-              <input id="rating-input" type="file" accept=".xlsx"/>
-              <input id="rating-submit" type="submit" class="button button-sandy" value="Upload Factor"/>
-            </form>
+          <div class="row border-top border-bottom">
+            <div class="column column-50">
+              <form id="xml-form">
+                <label for="xml-input"></label>
+                <input id="xml-input" type="file"/>
+                <input id="xml-submit" type="submit" class="button button-sandy" value="Upload XML"/>
+              </form>
+            </div>
+            <div class="column column-50">
+              <form id="rating-form">
+                <label for="rating-input"></label>
+                <input id="rating-input" type="file" accept=".xlsx"/>
+                <input id="rating-submit" type="submit" class="button button-sandy" value="Upload Ratings"/>
+              </form>
+            </div>
           </div>
             <form id="profile-form">
-            <div class="row"> 
+            <div class="row border-top border-bottom"> 
               <div class="column column-50">
                 <label for="profile-input"></label>
                 <input id="profile-input" type="file" accept=".xlsx"/>
                 <input id="profile-submit" type="submit" class="button button-sandy" value="Upload Profile"/>
               </div>
-              <div class="column column-50">
+              <div id="scenario-div" class="column column-50">
                 <label for="scenario">Scenario</label>
                 <input id="scenario-input" type="number" name="scenario" value="1">
               </div>
             </div>
             </form>
         </div>
-        <div class="column column-10" id="res-column">
-          <form id="res-form">
-            <label for="res-input"></label>
-            <input id="res-input" type="text"/>
-            <input id="res-submit" type="submit" class="button button-sandy" value="Display Result">
-          </form>
-            <h6 id="res-heading">Results</h6>
-            <ul id="res-list">
-            </ul>
-        </div>
-        <div class="column column-70 border-top border-bottom border-left border-right" id="graph-column">
+        <div class="column column-80 border-top border-bottom" id="graph-column">
           <svg id="bus-graph-svg">
             <g id="bus-x-axis"></g>
             <g id="bus-y-axis"></g>
             <g id="bus-parent-g"></g>
           </svg>
-          <svg class ="border-all" id="bus-graph-legend">
+          <svg class ="border-top border-bottom" id="bus-graph-legend">
           </svg>
           <svg id="line-graph-svg">
             <g id="line-x-axis"></g>
             <g id="line-y-axis"></g>
             <g id="line-parent-g"></g>
           </svg>
-          <svg class ="border-all" id="line-graph-legend">
+          <svg class ="border-top border-bottom" id="line-graph-legend">
           </svg>
           <svg id="transformer-graph-svg">
             <g id="transformer-x-axis"></g>
             <g id="transformer-y-axis"></g>
             <g id="transformer-parent-g"></g>
           </svg>
-          <svg class ="border-all" id="transformer-graph-legend">
+          <svg class ="border-top border-bottom" id="transformer-graph-legend">
           </svg>
         </div>
        </div>

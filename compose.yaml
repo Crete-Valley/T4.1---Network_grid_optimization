@@ -1,8 +1,10 @@
 services:
   dps:
-    image: soullessblob/dps-server:alpha
+    image: registry.git.rwth-aachen.de/acs/public/dpsv:alpha0.1.0
     hostname: dps-server
     container_name: dps
+    volumes:
+      - ./db:/dpsroot
     environment:
       DPS_EXPORT: false
       DPS_LOG_LEVEL: INFO

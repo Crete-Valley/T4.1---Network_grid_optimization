@@ -167,11 +167,3 @@ setInterval(()=>{
       coerce.forEach(l=>elems.reslist.appendChild(l))
     })
 },3000)
-
-
-
-
-/*
-
-
-          */

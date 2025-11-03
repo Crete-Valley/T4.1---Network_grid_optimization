@@ -80,8 +80,6 @@
         domain: "SP",
         solver: "NRP",
         opf: false,
-        dspf: false,
-        pppf: false,
         use_xml: "",
     };
 
@@ -160,6 +158,10 @@
             }); },
         };
     }
+    /*
+
+
+    */
 
     function ascending$1(a, b) {
       return a == null || b == null ? NaN : a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
@@ -4036,11 +4038,9 @@
     Transform.prototype;
 
     var grapher = /** @class */ (function () {
-        function grapher(dataset, idx, prefix) {
-            if (idx === void 0) { idx = idx; }
+        function grapher(dataset, _, prefix) {
             if (prefix === void 0) { prefix = prefix; }
             var _this = this;
-            this.idx = idx;
             this.prefix = prefix;
             this.clear_graph_area();
             this.nxt_clr = 0xf9a825;
@@ -4056,13 +4056,14 @@
                 var arr = grapher.to_arr(v).filter(function (_n) { return isFinite(_n); });
                 var m = Math.max.apply(Math, arr);
                 var min = Math.min.apply(Math, arr);
-                console.log(_this.prefix + ": " + m);
+                m = isFinite(m) ? m : 1;
+                min = isFinite(min) ? min : 1;
                 if (min < _this.y_min)
                     _this.y_min = min;
-                if (m > n)
-                    return m;
                 if (v.length > _this.x_max)
                     _this.x_max = v.length;
+                if (m > n)
+                    return m;
                 return n;
             }, 0) / 1e3;
             this.x_scale = linear()
@@ -4079,7 +4080,6 @@
         grapher.prototype.prep_graph_area = function () {
             var x_axis = select("#".concat(this.axis_id("x")));
             var y_axis = select("#".concat(this.axis_id("y")));
-            console.log(document.getElementById(this.legend_id()).getAttribute("height"));
             x_axis
                 .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * grapher.h))
                 .attr("transform", "translate(".concat(grapher.m, ",").concat(grapher.h, ")"));
@@ -4461,6 +4461,7 @@
                                 return __assign(__assign({}, obj), (_b = {}, _b[k.trimStart()] = v, _b));
                             }, {});
                             status.innerText = "\nSuccessfully fetched ".concat(sim_name, " result");
+                            console.log(res);
                             return [4 /*yield*/, postproc_wratings(res)];
                         case 3:
                             loadings = _e.sent();
@@ -4613,9 +4614,5 @@
             coerce.forEach(function (l) { return elems.reslist.appendChild(l); });
         });
     }, 3000);
-    /*
-
-
-              */
 
 })();

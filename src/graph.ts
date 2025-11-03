@@ -28,7 +28,7 @@ export class grapher{
 
     constructor(
         dataset:jres,
-        private idx:number = idx,
+        _:number,
         private prefix:string = prefix,
     ){
         this.clear_graph_area();
@@ -45,13 +45,13 @@ export class grapher{
         this.y_min = 0;
         this.y_max = Object.values(dataset).reduce((n:number,v:number[])=>{
             const arr = grapher.to_arr(v).filter(_n=>isFinite(_n))
-            const m = Math.max(...arr);
-            const min = Math.min(...arr);
-            console.log(this.prefix+": "+m)
+            let m = Math.max(...arr);
+            let min = Math.min(...arr);
+            m = isFinite(m) ? m : 1;
+            min = isFinite(min) ? min : 1;
             if(min < this.y_min) this.y_min = min;
-            if(m>n) return m;
             if(v.length>this.x_max) this.x_max = v.length;
-            
+            if(m>n) return m;
             return n;
         },0)/1e3
 
@@ -70,7 +70,6 @@ export class grapher{
     prep_graph_area() {
         const x_axis = select<SVGGElement,unknown>(`#${this.axis_id("x")}`)
         const y_axis = select<SVGGElement,unknown>(`#${this.axis_id("y")}`)
-        console.log(document.getElementById(this.legend_id())!.getAttribute("height"))
         x_axis
             .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(t=>t!==0)).tickSize(-2*grapher.h))
             .attr("transform",`translate(${grapher.m},${grapher.h})`)
