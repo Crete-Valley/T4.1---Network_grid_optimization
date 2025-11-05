@@ -4426,8 +4426,10 @@
             var resform = document.getElementById("res-form");
             var graphsvg = document.getElementById("graph-svg");
             var reslist = document.getElementById("res-list");
+            var sysviewb = document.getElementById("sysview-button");
             return {
                 simform: simform,
+                sysviewb: sysviewb,
                 xmlform: xmlform,
                 resform: resform,
                 profileform: profileform,
@@ -4461,7 +4463,6 @@
                                 return __assign(__assign({}, obj), (_b = {}, _b[k.trimStart()] = v, _b));
                             }, {});
                             status.innerText = "\nSuccessfully fetched ".concat(sim_name, " result");
-                            console.log(res);
                             return [4 /*yield*/, postproc_wratings(res)];
                         case 3:
                             loadings = _e.sent();
@@ -4479,10 +4480,47 @@
                 });
             }); };
         }
+        function mksysview(sysview, status) {
+            var _this = this;
+            sysview.onclick = function (ev) { return __awaiter(_this, void 0, void 0, function () {
+                var target, sim_name, res, _a, _b, _c, _d, ppd_bus_res, e_2;
+                return __generator(this, function (_e) {
+                    switch (_e.label) {
+                        case 0:
+                            target = (document.getElementById("res-input"));
+                            sim_name = target.value;
+                            _e.label = 1;
+                        case 1:
+                            _e.trys.push([1, 4, , 5]);
+                            _b = (_a = Object).entries;
+                            _d = (_c = Object).values;
+                            return [4 /*yield*/, api.get_result(sim_name)];
+                        case 2:
+                            res = _b.apply(_a, [_d.apply(_c, [_e.sent()])[0]]).reduce(function (obj, _a) {
+                                var _b;
+                                var k = _a[0], v = _a[1];
+                                return __assign(__assign({}, obj), (_b = {}, _b[k.trimStart()] = v, _b));
+                            }, {});
+                            status.innerText = "\nSuccessfully fetched ".concat(sim_name, " result");
+                            return [4 /*yield*/, postproc_wratings(res)];
+                        case 3:
+                            ppd_bus_res = _e.sent();
+                            localStorage.setItem("ppd_bus_res", JSON.stringify(ppd_bus_res.bus));
+                            window.location.href = "/sysview";
+                            return [3 /*break*/, 5];
+                        case 4:
+                            e_2 = _e.sent();
+                            status.innerText = "\nError fetching result:\n ".concat(e_2);
+                            return [3 /*break*/, 5];
+                        case 5: return [2 /*return*/];
+                    }
+                });
+            }); };
+        }
         function mksimform(simform, status) {
             var _this = this;
             simform.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
-                var data, params_1, e_2;
+                var data, params_1, e_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -4502,8 +4540,8 @@
                             status.innerText = "\nSuccessfully ran ".concat(params_1.name);
                             return [3 /*break*/, 4];
                         case 3:
-                            e_2 = _a.sent();
-                            status.innerText = "\nError running Sim:\n ".concat(e_2);
+                            e_3 = _a.sent();
+                            status.innerText = "\nError running Sim:\n ".concat(e_3);
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
                     }
@@ -4528,7 +4566,7 @@
         function mkxmlform(form, rtype, status) {
             var _this = this;
             form.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
-                var target, file, e_3;
+                var target, file, e_4;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -4545,8 +4583,8 @@
                             status.innerText = "\nSuccessfully uploaded ".concat(file.name);
                             return [3 /*break*/, 4];
                         case 3:
-                            e_3 = _a.sent();
-                            status.innerText = "\nError uploading ".concat(rtype, ":\n ").concat(e_3);
+                            e_4 = _a.sent();
+                            status.innerText = "\nError uploading ".concat(rtype, ":\n ").concat(e_4);
                             return [3 /*break*/, 4];
                         case 4: return [2 /*return*/];
                     }
@@ -4556,7 +4594,7 @@
         function mkprofileform(profileform, status) {
             var _this = this;
             profileform.onsubmit = function (ev) { return __awaiter(_this, void 0, void 0, function () {
-                var file_input, pre_file, scenario, file, e_4;
+                var file_input, pre_file, scenario, file, e_5;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -4577,8 +4615,8 @@
                             status.innerText = "\nSuccessfully uploaded ".concat(pre_file.name);
                             return [3 /*break*/, 5];
                         case 4:
-                            e_4 = _a.sent();
-                            status.innerText = "\nError uploading profile:\n ".concat(e_4);
+                            e_5 = _a.sent();
+                            status.innerText = "\nError uploading profile:\n ".concat(e_5);
                             return [3 /*break*/, 5];
                         case 5: return [2 /*return*/];
                     }
@@ -4591,6 +4629,7 @@
             mkxmlform: mkxmlform,
             mkprofileform: mkprofileform,
             mkresform: mkresform,
+            mksysview: mksysview,
             mkratingform: mkratingform
         };
     }
@@ -4602,6 +4641,7 @@
     builder.mkratingform(elems.ratingform);
     builder.mksimform(elems.simform, elems.status);
     builder.mkresform(elems.resform, elems.status);
+    builder.mksysview(elems.sysviewb, elems.status);
     setInterval(function () {
         api.get_results()
             .then(function (res) {

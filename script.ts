@@ -17,8 +17,10 @@ function mkbuilder(api: api) {
     const resform = <HTMLFormElement>document.getElementById("res-form")!;
     const graphsvg = <HTMLElement>document.getElementById("graph-svg")!;
     const reslist = <HTMLUListElement>document.getElementById("res-list")!;
+    const sysviewb = <HTMLButtonElement>document.getElementById("sysview-button")!;
     return {
       simform: simform,
+      sysviewb:sysviewb,
       xmlform: xmlform,
       resform: resform,
       profileform:profileform,
@@ -53,6 +55,31 @@ function mkbuilder(api: api) {
         }
       }
     };
+  }
+
+  function mksysview(
+    sysview:HTMLButtonElement,
+    status:HTMLHeadingElement
+  ){
+    sysview.onclick =  async (ev)=>{
+      const target: HTMLInputElement = <HTMLInputElement>(
+        document.getElementById("res-input")
+      );
+      const sim_name = target.value;
+      try {
+        const res = Object.entries(
+          Object.values(await api.get_result(sim_name))[0] as jres
+        ).reduce((obj,[k,v])=>{
+          return {...obj,[k.trimStart()]:v}
+        },{})
+        status.innerText = `\nSuccessfully fetched ${sim_name} result`;
+        const ppd_bus_res = await postproc_wratings(res);
+        localStorage.setItem("ppd_bus_res",JSON.stringify(ppd_bus_res.bus))
+        window.location.href = "/sysview"
+      } catch (e) {
+        status.innerText = `\nError fetching result:\n ${e}`;
+      }
+    }
   }
 
   function mksimform(simform: HTMLFormElement, status: HTMLHeadingElement) {
@@ -141,6 +168,7 @@ function mkbuilder(api: api) {
     mkxmlform: mkxmlform,
     mkprofileform:mkprofileform,
     mkresform: mkresform,
+    mksysview:mksysview,
     mkratingform:mkratingform
   };
 }
@@ -152,8 +180,9 @@ builder.mkxmlform(elems.xmlform, "xml", elems.status);
 builder.mkprofileform(elems.profileform, elems.status);
 builder.mkratingform(elems.ratingform)
 
-builder.mksimform(elems.simform,elems.status)
+builder.mksimform(elems.simform,elems.status);
 builder.mkresform(elems.resform, elems.status);
+builder.mksysview(elems.sysviewb,elems.status);
 
 setInterval(()=>{
   api.get_results()
