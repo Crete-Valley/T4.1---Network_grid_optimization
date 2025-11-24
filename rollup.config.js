@@ -7,7 +7,7 @@ export default [
     context: 'window',
     input: './script.ts',
     output: {
-      file: './script.js',
+      file: './public/script.js',
       format: 'iife',
       name: "kostegator"
     },

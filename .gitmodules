@@ -1,0 +1,3 @@
+[submodule "dps-server"]
+	path = dps-server
+	url = https://github.com/SystemsPurge/dps-server

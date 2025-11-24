@@ -1,0 +1,33 @@
+services:
+  devdpsv:
+    container_name: dps-server
+    hostname: dps-server
+    image: soullessblob/cv-dpsim-builder:alpha
+    working_dir: /app
+    ports:
+      - 5000:5000
+    volumes:
+      - ../dps-server/src:/app #source files
+      - ./db:/db #database
+      - ../dps-server/requirements.txt:/requirements.txt #dependencies
+      - ../dps-server/defaults.json:/defaults.json #config
+    environment:
+      - DPS_ROOT=/db
+      - DPS_MODE=local
+      - DPS_LOG_LEVEL=INFO
+      - DPS_DEFAULTS=/defaults.json
+    command: ['sh',
+      '-c',
+      'pip install -r /requirements.txt &&
+      uvicorn api-script:app --host 0.0.0.0 --port 5000']
+
+  demo:
+    image: node:23-alpine3.22
+    container_name: demo
+    hostname: demo
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app
+      - ../sensitive:/app/sensitive
+    command: ["sh","-c","npm install --prefix app && npm run start --prefix app"]
