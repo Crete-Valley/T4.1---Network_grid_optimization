@@ -14,4 +14,4 @@ The particularities of the project include:
 3. Providing a post simulation rating to calculate transformer/line rated loading, and bus power/voltage<br>
 
 These intell the basic usage of dpsim in terms of system/profile-data provision, but requires post and pre processing steps.<br>
-Once everything is configured you can run `npm run demo`, has been built using node 23.1 and npm 10.9
+Once everything is configured you can run `npm run start`, has been built using node 23.1 and npm 10.9
