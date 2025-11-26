@@ -31,7 +31,7 @@ export async function preproc(scenario:number,profile_file:File){
     const ncol = factors.getColumn(1).values
     profiles.eachSheet((s,sid)=>{
         //get names
-        let r =s.getRow(3).values as (string|undefined)[]
+        let r =s.getRow(1).values as (string|undefined)[]
         //replace keywords
         r = map_items(r)
         r.forEach((c,pidx)=>{
@@ -165,10 +165,9 @@ async function postproc_busses(result:jres){
 
             })
             loadings[compname+'_%V_mag'] = combm
-            loadings[compname+'_V_phase'] = combp
+            //loadings[compname+'_V_phase'] = combp
         }else if(sr.test(k)){
             //Here push im as q and re as p directly
-
             let isimaginary:boolean = k.endsWith(".im")
             let otherk:string = isimaginary ? k.replace("im","re") : k.replace("re","im")
             let otherv:number[] = result[otherk]
@@ -189,6 +188,7 @@ async function postproc_busses(result:jres){
             loadings[compname+'_Q'] = combq
         }
     }
+    console.log(loadings)
     return loadings
 }
 

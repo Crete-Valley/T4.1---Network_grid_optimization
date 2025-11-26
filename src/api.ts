@@ -42,7 +42,7 @@ export function mkapi() {
     },
     get_result: async (fname: string) => {
       const res = await fetch(`/jts/result/${fname}`);
-      const json = res.json();
+      const json = await res.json();
       return handle_err(json);
     },
     runsim: async (params: sim) => {

@@ -1,13 +1,14 @@
 
 
-import { select, scaleLinear, line, axisLeft, axisTop, selectAll, ScaleLinear, axisBottom } from "d3";
+import { select, scaleLinear, line, axisLeft, axisTop, selectAll, ScaleLinear, axisBottom, max } from "d3";
 import { jres } from "./models";
 
 export class grapher{
     static increment:number = 0x6c4a33;
     static w:number =window.innerWidth*0.60;
     static leg_h:number = window.innerHeight*0.15;
-    static m:number=50;
+    static mx:number=50;
+    static my:number = 70;
     static h:number = window.innerHeight*0.40;
     static GRAPH_SVG:string = "graph-svg";
     static PARENT_G:string="parent-g";
@@ -53,8 +54,10 @@ export class grapher{
             if(v.length>this.x_max) this.x_max = v.length;
             if(m>n) return m;
             return n;
-        },0)/1e3
-
+        },0)
+        if(prefix === 'bus'){
+            this.y_max/=10
+        }
         this.x_scale = scaleLinear()
             .domain([0, this.x_max - 1])
             .range([0, grapher.w]);
@@ -72,11 +75,11 @@ export class grapher{
         const y_axis = select<SVGGElement,unknown>(`#${this.axis_id("y")}`)
         x_axis
             .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(t=>t!==0)).tickSize(-2*grapher.h))
-            .attr("transform",`translate(${grapher.m},${grapher.h})`)
+            .attr("transform",`translate(${grapher.mx},${grapher.h-grapher.my})`)
         
         x_axis.selectAll(".tick line")
         y_axis
-            .attr("transform",`translate(${grapher.m},0)`)
+            .attr("transform",`translate(${grapher.mx},-${grapher.my})`)
             .call(axisLeft(this.y_scale).tickSize(-grapher.w).tickSizeOuter(0))
     }
 
@@ -107,7 +110,7 @@ export class grapher{
             .datum(data)
             .attr("class", "line")
             .attr("d", lin)
-            .attr("transform", `translate(50, 0)`)
+            .attr("transform", `translate(${grapher.mx}, -${grapher.my})`)
             .attr("stroke", "#" + this.nxt_clr.toString(16).padStart(6, "0").toUpperCase())
             .attr("fill", "none");
         this.nxt_clr = (this.nxt_clr + grapher.increment) % 0xffffff;

@@ -130,7 +130,9 @@
                         case 0: return [4 /*yield*/, fetch("/jts/result/".concat(fname))];
                         case 1:
                             res = _a.sent();
-                            json = res.json();
+                            return [4 /*yield*/, res.json()];
+                        case 2:
+                            json = _a.sent();
                             return [2 /*return*/, handle_err(json)];
                     }
                 });
@@ -4065,7 +4067,10 @@
                 if (m > n)
                     return m;
                 return n;
-            }, 0) / 1e3;
+            }, 0);
+            if (prefix === 'bus') {
+                this.y_max /= 10;
+            }
             this.x_scale = linear()
                 .domain([0, this.x_max - 1])
                 .range([0, grapher.w]);
@@ -4082,10 +4087,10 @@
             var y_axis = select("#".concat(this.axis_id("y")));
             x_axis
                 .call(axisBottom(this.x_scale).tickValues(this.x_scale.ticks().filter(function (t) { return t !== 0; })).tickSize(-2 * grapher.h))
-                .attr("transform", "translate(".concat(grapher.m, ",").concat(grapher.h, ")"));
+                .attr("transform", "translate(".concat(grapher.mx, ",").concat(grapher.h - grapher.my, ")"));
             x_axis.selectAll(".tick line");
             y_axis
-                .attr("transform", "translate(".concat(grapher.m, ",0)"))
+                .attr("transform", "translate(".concat(grapher.mx, ",-").concat(grapher.my, ")"))
                 .call(axisLeft(this.y_scale).tickSize(-grapher.w).tickSizeOuter(0));
         };
         grapher.prototype.clear_graph_area = function () {
@@ -4115,7 +4120,7 @@
                 .datum(data)
                 .attr("class", "line")
                 .attr("d", lin)
-                .attr("transform", "translate(50, 0)")
+                .attr("transform", "translate(".concat(grapher.mx, ", -").concat(grapher.my, ")"))
                 .attr("stroke", "#" + this.nxt_clr.toString(16).padStart(6, "0").toUpperCase())
                 .attr("fill", "none");
             this.nxt_clr = (this.nxt_clr + grapher.increment) % 0xffffff;
@@ -4152,7 +4157,8 @@
         grapher.increment = 0x6c4a33;
         grapher.w = window.innerWidth * 0.60;
         grapher.leg_h = window.innerHeight * 0.15;
-        grapher.m = 50;
+        grapher.mx = 50;
+        grapher.my = 70;
         grapher.h = window.innerHeight * 0.40;
         grapher.GRAPH_SVG = "graph-svg";
         grapher.PARENT_G = "parent-g";
@@ -4214,7 +4220,7 @@
                         ncol = factors.getColumn(1).values;
                         profiles.eachSheet(function (s, sid) {
                             //get names
-                            var r = s.getRow(3).values;
+                            var r = s.getRow(1).values;
                             //replace keywords
                             r = map_items(r);
                             r.forEach(function (c, pidx) {
@@ -4358,7 +4364,7 @@
                             }
                         });
                         loadings[compname_1 + '_%V_mag'] = combm_1;
-                        loadings[compname_1 + '_V_phase'] = combp_1;
+                        //loadings[compname+'_V_phase'] = combp
                     }
                     else if (sr.test(k)) {
                         //Here push im as q and re as p directly
@@ -4387,6 +4393,7 @@
                     _b = _a[_i], k = _b[0], v = _b[1];
                     _loop_3(k, v);
                 }
+                console.log(loadings);
                 return [2 /*return*/, loadings];
             });
         });
@@ -4645,7 +4652,7 @@
     setInterval(function () {
         api.get_results()
             .then(function (res) {
-            var coerce = res['result'].map(function (s) {
+            var coerce = res['lst'].map(function (s) {
                 var li = document.createElement("li");
                 li.innerText = s.split('.')[0];
                 return li;

@@ -187,7 +187,7 @@ builder.mksysview(elems.sysviewb,elems.status);
 setInterval(()=>{
   api.get_results()
     .then((res)=>{
-      const coerce:HTMLLIElement[] = (res['result'] as string[]).map(s=>{
+      const coerce:HTMLLIElement[] = (res['lst'] as string[]).map(s=>{
         const li = document.createElement("li")
         li.innerText = s.split('.')[0];
         return li;

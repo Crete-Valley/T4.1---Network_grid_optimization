@@ -47,7 +47,7 @@ function highlight(res){
 
 const slider = document.getElementById("timestep")
 
-nxhr_builder("svg-container","/sensitive/yn-crete.svg")()
+nxhr_builder("svg-container","/sensitive/crete.svg")()
 let data = JSON.parse(localStorage.getItem("ppd_bus_res"));
 
 //remove phases
