@@ -3,7 +3,7 @@
 This repo includes examples on how to prepare data for this specific use case, how to post process results and an example of a web interface to interact
 with dpsim server.<br>
 # DPS-SERVER
-A demonstration on how to use dps-server is in [this repo](https://github.com/SystemsPurge/dps-server).<br>
+A demonstration on how to use dps-server is in [this repo](https://git.rwth-aachen.de/acs/public/dpsv).<br>
 # Demo
 `docker compose up` on `docker/compose.yaml` will serve the website on port 3000 ( change port in package.json script and compose.yaml if necessary)
 and backend on port 5000.<br>
