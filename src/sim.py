@@ -6,6 +6,7 @@ from logging import Logger,getLogger
 import pandas as pd
 from pandas import DataFrame
 import pandapower as pp
+import traceback
 from shutil import rmtree
 from pandapower.converter import from_cim as cim2pp
 import os 
@@ -188,25 +189,22 @@ class simulator(base_sim):
             
             def getp(comp:str,ts:str=None)->float:
                 try:
-                    f = -1 if 'genstat' in comp else 1
-                    if f < 0:
-                        self.log.info(f"Found genstat: {comp}")
-                    if f'{comp}_p' in self.__profile_names:
-                        value_p = profiles[profiles['timestamp'] == ts][f'{comp}_p'].values[0]
-                        if pd.notna(value_p):
-                            self.sim.get_idobj_attr(comp,'P').set(profiles[profiles['timestamp'] == ts][f'{comp}_p'].values[0]*simulator.mw_w*f)
-                            self.log.debug(f'Found P value for {comp} at {ts}')
-                        else:
-                            self.log.debug(f'P value for {comp} at {ts} is None')
-                    if f'{comp}_q' in self.__profile_names:
-                        value_q = profiles[profiles['timestamp'] == ts][f'{comp}_q'].values[0]
-                        if pd.notna(value_q):
-                            self.sim.get_idobj_attr(comp,'Q').set(profiles[profiles['timestamp'] == ts][f'{comp}_q'].values[0]*simulator.mw_w*f)
-                            self.log.debug(f'Found Q value for {comp} at {ts}')
-                        else:
-                            self.log.debug(f'Q value for {comp} at {ts} is None')
-                except Exception as e:
-                    self.log.debug(f'Encountered error when assigning profile value: {e}')
+                    attribute = 'P' if f'{comp}_p' in self.__profile_names else 'Q' if f'{comp}_q' in self.__profile_names else ""
+                    if len(attribute) == 0:
+                        return
+                    
+                    factor = -1 if 'genstat' in comp else 1
+                    clsname = self.system.list_idobjects().get(comp)
+                    suffix = "_set" if clsname.endswith('SynchronGenerator') else ""
+                    key = f'{comp}_{attribute.lower()}'
+                    attribute = f'{attribute}{suffix}'
+                    value = profiles[profiles['timestamp'] == ts][key].values[0]
+                    if pd.notna(value):
+                        self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
+                        self.log.debug(f'Found {attribute} value for {comp} at {ts}')
+                except Exception:
+                    self.log.debug(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
+                    raise
 
             funcs.append(getp)
             
