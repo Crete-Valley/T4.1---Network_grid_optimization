@@ -17,6 +17,9 @@
    * [🗄️ XML (CIM Archive) Endpoints](#-xml-cim-archive-endpoints)
    * [📊 Time Series File Endpoints (Legacy/Deprecated)](#-time-series-file-endpoints-legacydeprecated)
    * [📑 Schema Definitions (Models)](#-schema-definitions-models)
+- [UI Demo](#-ui-demo)
+   * [Capabilities Demo](#-capabilities-demo)
+   * [Other Useful Operations](#-other-useful-operations)
 
 <!-- TOC end -->
 <!-- TOC --><a name="usage"></a>
@@ -227,7 +230,9 @@ Standard response model for listing resource names.
 * **`Body_post_xml_xml_post`**: Multipart model for posting XML files.
 * **`Body_post_ts_ts_profile_post`**: Multipart model for posting TS profile files.
 
+<!-- TOC --><a name="-ui-demo"></a>
 # UI Demo
+<!-- TOC --><a name="-capabilities-demo"></a>
 ## Capabilities Demo
 The repository contains a demonstration on how to add dpsim server as a service in your web ecosystem in the ui-demo folder.
 
@@ -238,7 +243,8 @@ The website highlights the different ways dpsim server can be driven with the us
 
 Encompassing all capabilities of the server.
 
-## Other useful operations
+<!-- TOC --><a name="-other-useful-operations"></a>
+## Other Useful Operations
 The demo also emphasizes different ways of leveraging simulation results, including a way to highlight SVGs generated
 from the CIM data.
 
