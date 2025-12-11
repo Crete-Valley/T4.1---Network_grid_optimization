@@ -1,0 +1,24 @@
+services:
+  dps:
+    image: registry.git.rwth-aachen.de/acs/public/dpsv:alpha0.1.0
+    hostname: dps-server
+    pull_policy: always
+    container_name: dps
+    volumes:
+      - ./db:/dpsroot
+    environment:
+      DPS_EXPORT: false
+      DPS_LOG_LEVEL: INFO
+    ports:
+      - 5000:5000
+
+  demo:
+    image: node:23-alpine3.22
+    container_name: demo
+    hostname: demo
+    ports:
+      - 3001:3000
+    volumes:
+      - ./:/app
+      - ../sensitive:/app/sensitive
+    command: ["sh","-c","npm install --prefix app && npm run start --prefix app"]

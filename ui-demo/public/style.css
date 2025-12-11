@@ -1,0 +1,156 @@
+body{
+    margin:0;
+    padding:0;
+    width:50vw;
+}
+
+#main{
+    width:100vw;
+    margin:0;
+    height:100vh;
+}
+
+#meta-row{
+    width: 100vw;
+    height:25vh;
+}
+
+#res-list{
+    overflow-y: scroll;
+    max-height: 100%;
+}
+
+#status-column{
+    justify-content: center;
+    align-items: center;
+    display:flex;
+}
+
+
+#work-row{
+    width: 100vw;
+}
+
+#res-heading{
+    text-align:center
+}
+
+#bus-graph-svg{
+    margin-top:5px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:35vh;
+    width:95%;
+}
+
+#bus-graph-legend{
+    margin-left:2vw;
+    height:18vh;
+    width:95%;
+    overflow-X:scroll;
+}
+
+#line-graph-svg{
+    margin-top:5px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:35vh;
+    width:95%;
+}
+
+#line-graph-legend{
+    margin-left:2vw;
+    height:18vh;
+    width:95%;
+}
+
+#transformer-graph-svg{
+    margin-top:5px;
+    margin-bottom:5px;
+    margin-left:2vw;
+    height:35vh;
+    width:95%;
+}
+
+#transformer-graph-legend{
+    margin-left:2vw;
+    margin-bottom:5px;
+    height:18vh;
+    width:95%;
+}
+
+#sim-submit{
+    margin-top: 3vh;
+    margin-left: 1vw;
+}
+
+
+.title-row{
+    margin-bottom:5vh;
+    justify-content: center;
+    align-items: center;
+    display:flex;
+}
+
+#scenario-div{
+    margin-top:1vh;
+}
+
+.tick line {
+    stroke: #ccc; 
+    stroke-opacity: 0.3;
+    shape-rendering: crispEdges;
+}
+
+.grid path {
+    stroke-opacity:0;
+}
+
+.border-all{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
+    border-radius: 1%;
+    opacity:80%;
+    border: 2px ridge #e0e0e0;
+}
+
+.border-bottom{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
+    border-radius: 1%;
+    border-bottom: 2px ridge #e0e0e0;
+}
+
+.border-top{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
+    border-radius: 1%;
+    border-top: 2px ridge #e0e0e0;
+}
+
+.border-right{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
+    border-radius: 1%;
+    border-right: 2px ridge #e0e0e0;
+}
+
+.border-left{
+    box-shadow: 
+        0px 4px 8px rgb(0,0,0,0.1);
+    border-radius: 1%;
+    border-left: 2px ridge #e0e0e0;
+}
+
+.button.button-sandy,
+.button.button-sandy{
+    background-color: #155263;
+    max-width: 100%;
+    padding-left:1vw;
+    color:white;
+    border-color:#155263;
+}
+
+input[type=file]{ 
+    color:transparent;
+}

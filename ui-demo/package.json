@@ -1,0 +1,32 @@
+{
+  "name": "minimal-gui",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3000 -P http://dps-server:5000",
+    "format": "prettier --write \"./**/*.ts\"",
+    "build": "rollup --config --bundleConfigAsCjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^24.3.1",
+    "prettier": "^3.6.2",
+    "rollup": "^4.50.1",
+    "rollup-plugin-polyfill-node": "^0.13.0",
+    "tslib": "^2.8.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "exceljs": "^4.4.0",
+    "http-server": "^14.1.1",
+    "milligram": "^1.4.1"
+  }
+}
