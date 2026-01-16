@@ -320,8 +320,8 @@ async function runSimulation(simName, xmlKeyword, profileKeyword = null) {
         duration: 300,
         timestep: 1,
         freq: 50,
-        solver: "NRP", // Newton-Raphson Powerflow
-        domain: "SP"   // Single Phase
+        solver: "NRP",
+        domain: "SP"
     };
 
     const response = await fetch(`${SERVER_URL}/${Endpoints.START_SIM.path}`, {
@@ -369,8 +369,8 @@ This object defines the configuration for the DPSim solver. It is sent as the JS
 | `use_profile` | `string` (opt) | A keyword used to identify which uploaded time-series profile to apply to loads. |
 | `duration` | `number` | The total length of the simulation in seconds. |
 | `timestep` | `number` | The time step size for the solver. |
-| `solver` | `string` | The solver engine to use (e.g., `NRP` for Powerflow, `DP` for Dynamic Phasors). |
-| `domain` | `string` | The simulation domain (e.g., `SP` for Single Phase, `TP` for Three Phase). |
+| `solver` | `string` | The solver engine to use. |
+| `domain` | `string` | The simulation domain. |
 
 
 ### Result Response
