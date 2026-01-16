@@ -11,15 +11,13 @@
    * [Open API spec](#open-api-spec)
    * [DPSIM Usage](#dpsim-usage)
    * [Pandapower Usage](#pandapower-usage)
-- [🚀 API Reference](#-api-reference)
-   * [⏳ Time Series Profile (JSON)](#-time-series-profile-json)
-   * [⚙️ Simulation Endpoint](#-simulation-endpoint)
-   * [🗄️ XML (CIM Archive) Endpoints](#-xml-cim-archive-endpoints)
-   * [📊 Time Series File Endpoints (Legacy/Deprecated)](#-time-series-file-endpoints-legacydeprecated)
-   * [📑 Schema Definitions (Models)](#-schema-definitions-models)
-- [UI Demo](#-ui-demo)
-   * [Capabilities Demo](#-capabilities-demo)
-   * [Other Useful Operations](#-other-useful-operations)
+- [API Reference](#-api-reference)
+   * [Time Series Profile (JSON)](#-time-series-profile-json)
+   * [Simulation Endpoint](#-simulation-endpoint)
+   * [XML (CIM Archive) Endpoints](#-xml-cim-archive-endpoints)
+   * [Time Series File Endpoints (Legacy/Deprecated)](#-time-series-file-endpoints-legacydeprecated)
+   * [Schema Definitions (Models)](#-schema-definitions-models)
+- [Frontend Integration Guide](#-integration-guide)
 
 <!-- TOC end -->
 <!-- TOC --><a name="usage"></a>
@@ -61,14 +59,14 @@ This server provides [the optimal powerflow implemented by pandapower](https://g
 
 This functionality is "TODO" and not fully implemented yet.<br>
 <!-- TOC --><a name="-api-reference"></a>
-# 🚀 API Reference
+# API Reference
 
 This document provides a reference for the available endpoints and data models in the system.
 
 ---
 
 <!-- TOC --><a name="-time-series-profile-json"></a>
-## ⏳ Time Series Profile (JSON)
+## Time Series Profile (JSON)
 
 These endpoints handle uploading and retrieving time series data in a **JSON** format.
 
@@ -95,7 +93,7 @@ These endpoints handle uploading and retrieving time series data in a **JSON** f
 ---
 
 <!-- TOC --><a name="-simulation-endpoint"></a>
-## ⚙️ Simulation Endpoint
+## Simulation Endpoint
 
 This endpoint initiates a simulation run.
 
@@ -112,7 +110,7 @@ This endpoint initiates a simulation run.
 ---
 
 <!-- TOC --><a name="-xml-cim-archive-endpoints"></a>
-## 🗄️ XML (CIM Archive) Endpoints
+## XML (CIM Archive) Endpoints
 
 These endpoints manage the uploading, listing, and deletion of **CIM data archives** (XML/ZIP).
 
@@ -143,7 +141,7 @@ These endpoints manage the uploading, listing, and deletion of **CIM data archiv
 ---
 
 <!-- TOC --><a name="-time-series-file-endpoints-legacydeprecated"></a>
-## 📊 Time Series File Endpoints (Legacy/Deprecated)
+## Time Series File Endpoints (Legacy/Deprecated)
 
 These endpoints handle time series data as files.
 
@@ -163,7 +161,7 @@ These endpoints handle time series data as files.
 ---
 
 <!-- TOC --><a name="-schema-definitions-models"></a>
-## 📑 Schema Definitions (Models)
+## Schema Definitions (Models)
 
 The following models define the structure of data used in the requests and responses.
 
@@ -230,33 +228,162 @@ Standard response model for listing resource names.
 * **`Body_post_xml_xml_post`**: Multipart model for posting XML files.
 * **`Body_post_ts_ts_profile_post`**: Multipart model for posting TS profile files.
 
-<!-- TOC --><a name="-ui-demo"></a>
-# UI Demo
-<!-- TOC --><a name="-capabilities-demo"></a>
-## Capabilities Demo
-The repository contains a demonstration on how to add dpsim server as a service in your web ecosystem in the ui-demo folder.
+---
 
-The website highlights the different ways dpsim server can be driven with the use of forms, including forms for:
-- CIM data provision
-- Profile provision
-- Running simulations with/without imposing load/generator profiles
+<!-- TOC --><a name="-integration-guide"></a>
+# DPSim Server API Integration Guide
 
-Encompassing all capabilities of the server.
+This part outlines the workflow for integrating the **DPSim Server** into a web-based ecosystem. It covers grid data provision (CIM), profile management, simulation execution, and result retrieval using JavaScript.
 
-<!-- TOC --><a name="-other-useful-operations"></a>
-## Other Useful Operations
-The demo also emphasizes different ways of leveraging simulation results, including a way to highlight SVGs generated
-from the CIM data.
+This assume dpsim has been deployed with the tool of your choice, and is accessible to the frontend over the network.
 
-An example software that generates SVG's from CIM data is Powerfactory.<br>
 
-The generated SVG usually associates component names, as referenced in the simulation, to graph `<g>` elements representing the components.<br>
+## 1. System Architecture
+The DPSim server operates as a RESTful service. The typical workflow follows a "Data-First" approach:
 
-The generated SVG also sometimes includes geography based topological data ( relative position of components ).<br>
+1.  **CIM Data Provision:** Upload grid topology via XML/ZIP.
+2.  **Profile Provision:** Upload time-series data (Active/Reactive power).
+3.  **Simulation Execution:** Trigger the solver with specific parameters.
+4.  **Data Retrieval:** Fetch results for frontend visualization.
 
-The `loder.js` script under the `public` folder in `ui-demo` is an example that takes simulation result data,
-finds the corresponding graph `<g>` element in the SVG by ID, then applies a specific coloring depending , in this case,
-on the rate of change of the attribute values of that component ( voltage for busses, current for lines ).<br>
 
-In this specific case, the derivative has been chosen as a measure of stability, and color gradient is distributed between red and green.
+## 2. API Constants & Endpoints
 
+Configuration
+
+```javascript
+const SERVER_URL = "http://localhost:5000";
+
+const Endpoints = {
+    UPLOAD_CIM: { path: "xml", method: "POST" },
+    LIST_CIM: { path: "xml", method: "GET" },
+    UPLOAD_PROFILE: { path: "jts/profile", method: "POST" },
+    START_SIM: { path: "s", method: "POST" },
+    GET_RESULT: { path: "jts/result", method: "GET" }
+};
+```
+## 3. Core Implementation
+
+### A. Uploading Grid Data (CIM XML)
+
+CIM data must be sent as a multipart form-data archive (ZIP).
+
+```javascript
+async function uploadCimArchive(file) {
+    const formData = new FormData();
+    formData.append('file', file); // 'file' is the key expected by the server
+
+    const response = await fetch(`${SERVER_URL}/${Endpoints.UPLOAD_CIM.path}`, {
+        method: Endpoints.UPLOAD_CIM.method,
+        body: formData
+    });
+    
+    return await response.json();
+}
+```
+
+### B. Providing Load Profiles
+
+Profiles are sent as JSON arrays containing timestamps and power values.
+
+```javascript
+async function uploadProfile(profileName, dataPoints) {
+    /*
+    dataPoints should be an array of:
+    {
+        ts: number,           // Unix timestamp
+        value: number,        // Power value
+        profile_type: string, // Component name
+        power_type: string    // e.g., "active" or "reactive"
+    }
+    */
+    const response = await fetch(`${SERVER_URL}/${Endpoints.UPLOAD_PROFILE.path}/${profileName}`, {
+        method: Endpoints.UPLOAD_PROFILE.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataPoints)
+    });
+    
+    return await response.json();
+}
+```
+
+### C. Running a Simulation
+
+Trigger the simulation by referencing the keywords used during the upload phase.
+
+```javascript
+async function runSimulation(simName, xmlKeyword, profileKeyword = null) {
+    const payload = {
+        name: simName,
+        use_xml: xmlKeyword,
+        use_profile: profileKeyword,
+        duration: 300,
+        timestep: 1,
+        freq: 50,
+        solver: "NRP", // Newton-Raphson Powerflow
+        domain: "SP"   // Single Phase
+    };
+
+    const response = await fetch(`${SERVER_URL}/${Endpoints.START_SIM.path}`, {
+        method: Endpoints.START_SIM.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    
+    return await response.json();
+}
+```
+
+### D. Retrieving and Visualizing Results
+
+Results are returned as a dictionary of time-series. In a frontend context, you would typically map these to a charting library like Chart.js or D3.js.
+Result dictionary keys contain: Component name + _Observable letter (V, I, P or Q) + _Other labels , 
+
+```javascript
+async function fetchAndProcessResults(simName) {
+    const response = await fetch(`${SERVER_URL}/${Endpoints.GET_RESULT.path}/${simName}`);
+    const data = await response.json();
+    const results = data.result;
+
+    // Example: Calculate Magnitude for a specific component
+    const timestamps = results.time;
+    const componentRe = results['NAME_LABELS_<V|I|P|Q>.re'];
+    const componentIm = results['NAME_LABELS_<V|I|P|Q>.im'];
+
+    const magnitudes = componentRe.map((re, i) => {
+        return Math.sqrt(Math.pow(re, 2) + Math.pow(componentIm[i], 2));
+    });
+
+    return { timestamps, magnitudes };
+}
+```
+## 4. Data Models Reference
+
+### Simulation Parameters Object
+This object defines the configuration for the DPSim solver. It is sent as the JSON payload when triggering a simulation.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `name` | `string` | The unique identifier for the simulation. Results will be saved under this name. |
+| `use_xml` | `string` | A keyword used to identify which uploaded CIM archive to use for the topology. |
+| `use_profile` | `string` (opt) | A keyword used to identify which uploaded time-series profile to apply to loads. |
+| `duration` | `number` | The total length of the simulation in seconds. |
+| `timestep` | `number` | The time step size for the solver. |
+| `solver` | `string` | The solver engine to use (e.g., `NRP` for Powerflow, `DP` for Dynamic Phasors). |
+| `domain` | `string` | The simulation domain (e.g., `SP` for Single Phase, `TP` for Three Phase). |
+
+
+### Result Response
+The server returns a JsonTimeseries object. Note that electrical values are decomposed into real (.re) and imaginary (.im) components.
+
+```json
+{
+  "result": {
+    "time": [1700000000, 1700000060, 1700000120],
+    "BUS1.re": [1.0, 0.98, 0.99],
+    "BUS1.im": [0.0, 0.01, -0.01],
+    "LNE_A.re": [45.2, 46.1, 45.8],
+    "LNE_A.im": [2.1, 2.3, 2.2]
+  }
+}
+```
