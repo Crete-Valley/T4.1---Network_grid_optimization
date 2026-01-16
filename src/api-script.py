@@ -1,5 +1,6 @@
 from fastapi import FastAPI,UploadFile,HTTPException,File,Path
 from fdb import fdb
+import traceback
 from models import (
     interface,
     SimParameters,
@@ -90,11 +91,13 @@ async def get_jts(
     i.l.info(f'Got request to get resource {tsname} of {"result"} as json')
     try:
         res = i._d._jtsget("result",tsname)
-        res = res.get(tsname)
+        res = res.get(list(res.keys())[0])
+        i.l.info(res.keys())
         res = {k:list(v.values()) for k,v in res.items()}
         res = {k:v for k,v in res.items() if not any([isinstance(_v,str) for _v in v])}
         return {'result':res}
     except Exception as rle:
+        i.l.error(traceback.format_exc())
         raise HTTPException(status_code=400,detail=f'Error getting json {tsname} of {"result"}: {rle}')
 
 #Run a simulation.

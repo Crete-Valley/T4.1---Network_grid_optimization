@@ -8,7 +8,7 @@ from pandas import DataFrame
 import pandapower as pp
 import traceback
 from shutil import rmtree
-from pandapower.converter import from_cim as cim2pp
+from pandapower.converter.cim import from_cim as cim2pp
 import os 
 import re
 from fdb import fdb
@@ -114,23 +114,18 @@ class simulator(base_sim):
         self.log.info('Starting simulation loop')
         self.__loop()
     
-    #gotta do these shennanigans because DPSIM is corrupting result keys
+    
     def __stop(self):
         #BYTES->DF
-        raw_bytes: bytes
-        with open(f'logs/{self.name}.csv', 'br') as f:
-            raw_bytes = f.read()
-        df = pd.read_csv(io.StringIO(raw_bytes.decode('utf-8')))
+        df = pd.read_csv(f'logs/{self.name}.csv')
 
         #STRIP SPACES
         df.columns = [col.strip() for col in df.columns]
-        print(df.columns)
         #DF->BYTES
         output_buffer = io.StringIO()
-        df.to_csv(output_buffer, index=False)
+        df.to_csv(output_buffer)
         simulator._fdb.tsaddraw('result', self.name + '.csv', output_buffer.getvalue().encode('utf-8'))
         rmtree('logs')
-        
         
     def configure(self) -> None:
         self.log.info('Configuring')
