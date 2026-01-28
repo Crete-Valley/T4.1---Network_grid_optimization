@@ -45,6 +45,7 @@ class fdb:
             os.makedirs(self.__path(v),exist_ok=True)
         os.makedirs(self.__path('xmls'),exist_ok=True)
         os.makedirs(self.__path('archives'),exist_ok=True)
+        
     
     def tsget(self,tstype:__tstype,tsname:str)->dict[str,DataFrame]:
         self.l.info(f'Getting timeseries {tsname} of {tstype}')

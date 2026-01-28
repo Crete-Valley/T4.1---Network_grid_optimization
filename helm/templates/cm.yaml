@@ -1,0 +1,12 @@
+{{ if .Values.db.init }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dpsv-xml-init
+  namespace: {{ .Release.Namespace}}
+binaryData:
+  {{ range $path, $_ :=  .Files.Glob "init-db/**" }}
+    {{ base $path | nindent 2 }}:
+        {{ $.Files.Get $path | b64enc | nindent 4 }}
+  {{ end }}
+{{ end }}

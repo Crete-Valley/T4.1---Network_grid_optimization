@@ -15,17 +15,47 @@ spec:
       labels:
         app: dpsv
     spec:
-      containers:
-      - name: dpsv-container
-        image: registry.git.rwth-aachen.de/acs/public/dpsv:alpha0.1.0
-        {{- if .Values.persist }}
-        volumeMounts:
-        - name: dpsv-volume
-          mountPath: /dpsroot
-        {{- end}}
-      {{- if .Values.persist }}
+      {{- if or .Values.db.init .Values.db.persist }}
       volumes:
+      {{- if .Values.db.init }}
+      - name: shared-copy-volume
+        emptyDir: {}
+      - name: xml-init-volume
+        configMap:
+          name: dpsv-xml-init
+      {{ end }}
+      {{- if .Values.db.persist }}
       - name: dpsv-volume
         persistentVolumeClaim:
           claimName: dpsv-pvc
-      {{- end}}
+      {{ end }}
+      {{ end }}
+      {{- if .Values.db.init }}
+      initContainers:
+        - name: init-entrypoint-creator
+          image: busybox:latest
+          volumeMounts:
+            - name: xml-init-volume
+              mountPath: /source
+            - name: shared-copy-volume
+              mountPath: /destination
+          command: ["sh", "-c"]
+          args:
+            - |
+              for f in /source/*.zip; do unzip -d "/destination/$(basename "$f" .zip)" "$f"; done
+              chmod -R 777 /destination
+      {{ end }}
+      containers:
+      - name: dpsv-container
+        image: registry.git.rwth-aachen.de/acs/public/dpsv:alpha0.1.0
+        {{- if or .Values.db.init .Values.db.persist }}
+        volumeMounts:
+        {{- if .Values.db.persist }}
+        - name: dpsv-volume
+          mountPath: /dpsroot
+        {{ end }}
+        {{ if .Values.db.init }}
+        - name: shared-copy-volume
+          mountPath: /dpsroot/xmls
+        {{ end }}
+        {{ end }}
