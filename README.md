@@ -40,9 +40,12 @@ In this manner, results are retrieved from `<db folder>/result/<sim name>`.<br>
 <!-- TOC --><a name="helm"></a>
 ## Helm
 To install chart locally on a kubernetes cluster, run 
-`helm install dpsv ./helm-dpsv --namespace dpsv --create-namespace`
+`helm install dpsv ./helm --namespace dpsv --create-namespace -f ./helm/values.yaml`
 From the root folder. Change persist to true in values, to persist the timeseries/results database 
 Server has no authentication, hiding it behind a proxy+ IDP is a good idea.<br>
+You can initialize the database with CIM XML profile data by setting the db.init value to true,
+helm will then go looking for archives in the init-db folder inside the chart. Due to limitations on
+the helm release secret size, initializing the DB is only supported through 1 archive at a time.<br>
 
 <!-- TOC --><a name="open-api-spec"></a>
 ## Open API spec
