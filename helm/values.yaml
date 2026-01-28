@@ -1,5 +1,6 @@
-persist: false
-
 db:
-  persist: false
-  init: false
+  init: true
+
+persist:
+  enabled: true
+  storage_class: "local-path"
