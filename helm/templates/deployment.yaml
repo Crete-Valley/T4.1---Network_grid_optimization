@@ -47,7 +47,7 @@ spec:
       {{ end }}
       containers:
       - name: dpsv-container
-        image: registry.git.rwth-aachen.de/acs/public/dpsv:alpha0.1.0
+        image: registry.git.rwth-aachen.de/acs/public/dpsv:latest
         {{- if or .Values.db.init .Values.persist.enabled }}
         volumeMounts:
         {{- if .Values.persist.enabled }}
