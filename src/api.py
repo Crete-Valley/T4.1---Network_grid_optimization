@@ -110,7 +110,8 @@ async def run_sim(p:SimParameters)->UploadFileResult:
     try:
         i._d._run(p.model_dump())
     except Exception:
-        raise HTTPException(status_code=400,detail=f'Error running simulation: {traceback.format_exc()}')
+        i.l.error(traceback.format_exc())
+        raise HTTPException(status_code=400,detail=f'Error running simulation.')
     return {'filename':p.name}
 
 #Upload a profile time series file.
