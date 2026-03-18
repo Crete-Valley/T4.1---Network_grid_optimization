@@ -92,9 +92,8 @@ async def get_jts(
     try:
         res = i._d._jtsget("result",tsname)
         res = res.get(list(res.keys())[0])
-        i.l.info(res.keys())
+        i.l.debug(res)
         res = {k:list(v.values()) for k,v in res.items()}
-        res = {k:v for k,v in res.items() if not any([isinstance(_v,str) for _v in v])}
         return {'result':res}
     except Exception as rle:
         i.l.error(traceback.format_exc())
