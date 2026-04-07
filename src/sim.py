@@ -196,10 +196,9 @@ class simulator(base_sim):
                     value = profiles[profiles['timestamp'] == ts][key].values[0]
                     if pd.notna(value):
                         self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
-                        self.log.debug(f'Found {attribute} value for {comp} at {ts}')
-                except Exception:
-                    self.log.debug(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
-                    raise
+                except Exception as e:
+                    self.log.error(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
+                    raise e
 
             funcs.append(getp)
             
@@ -211,9 +210,9 @@ class simulator(base_sim):
                     try:
                         self.sim.get_idobj_attr(comp,'P').set(self.__opf[self.__opf['name'] == comp]['active']*simulator.mw_w*f)
                         self.sim.get_idobj_attr(comp,'Q').set(self.__opf[self.__opf['name'] == comp]['reactive']*simulator.mw_w*f)
-                        self.log.debug(f'Found opf value for {comp}')
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        self.log.error(f'Error assigning opf power attribute value for {comp}: {traceback.format_exc()}')
+                        raise e
             funcs.append(repl0)
         
         if len(funcs) == 0:
@@ -279,7 +278,6 @@ class simulator(base_sim):
         self.log.info('Preprocessing profiles')
         sheets = simulator._fdb.tsget('profile',self.use_profile)
         dfs = list(sheets.values())
-        self.log.info(dfs)
         # Extract the datetime column from the first sheet (assuming the datetime column is the same across all sheets)
         time_col = dfs[0]['timestamp']
         self.__time = time_col.dropna(how='all').values
