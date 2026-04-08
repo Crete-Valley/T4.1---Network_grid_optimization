@@ -20,7 +20,6 @@ dependencies = [
 
 [project.scripts]
 dps-server = "api_script:main"
-dps = "cli_script:main"
 
 [tool.setuptools]
-py-modules = ["api_script", "api","cli_script","cli","delegate","fdb","models","sim"]
+py-modules = ["api_impl", "api_script","api","fdb","models","sim"]

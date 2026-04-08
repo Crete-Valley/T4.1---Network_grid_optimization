@@ -25,7 +25,7 @@ class base_sim:
             opf:bool=False,
             use_profile:str = None,
             use_xml:str = None,
-            replace_map:dict[str,str] = None
+            replace_map:dict[str,str] = {}
     ):
         
         self.name = name
@@ -35,7 +35,7 @@ class base_sim:
         self.opf = opf
         self.use_xml = use_xml
         self.use_profile = use_profile
-        self.replace_map = replace_map
+        self.replace_map = {} if replace_map is None else replace_map
         if domain == "SP":
             self.domain = dpsim.Domain.SP
         elif domain == "DP":
@@ -96,14 +96,14 @@ class simulator(base_sim):
         self,
         name:str = os.urandom(6).hex(),
         freq:int = 50,
-        duration:int=1440,
+        duration:int=100,
         timestep:float=0.1,
         domain:str = 'SP',
         solver:str = 'NRP',
         opf:bool=False,
         use_profile:str = None,
         use_xml:str = None,
-        replace_map:dict[str,str] = None
+        replace_map:dict[str,str] = {}
     ):
         super().__init__(
             name,freq,duration,timestep,domain,solver,opf,use_profile,use_xml,replace_map
@@ -129,14 +129,7 @@ class simulator(base_sim):
         
     def configure(self) -> None:
         self.log.info('Configuring')
-        self.replace_map  = {
-            'lod': 'load',
-            'sym': 'machine',
-            'genstat': 'machine',
-            'shntfix': 'fixed shunt',
-            'shntswt': 'switched_shunt'
-        }
-        self.sim = dpsim.Simulation(self.name)
+        self.sim = dpsim.Simulation(name=self.name,loglevel=dpsim.LogLevel.off)
         self.__validate()
         self.sim.set_time_step(self.timestep)
         self.sim.set_final_time(self.duration)
@@ -196,6 +189,7 @@ class simulator(base_sim):
                     value = profiles[profiles['timestamp'] == ts][key].values[0]
                     if pd.notna(value):
                         self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
+                        self.log.debug(f"Assigned {attribute} to {comp}")
                 except Exception as e:
                     self.log.error(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
                     raise e
@@ -306,11 +300,15 @@ class simulator(base_sim):
     
     def __assign_comps(self,profiles:DataFrame)->DataFrame:
         self.log.info('Assigning components')
-        def modify_string(s, replace_map):
-            # Replace firt substring with the mapped substring
-            for old, new in replace_map.items():
-                s = s.replace(old, new)  # Replace each part of the string
-            return s
+        if len(self.replace_map) == 0:
+            def modify_string(s,_):
+                return s
+        else:
+            def modify_string(s, replace_map):
+                # Replace firt substring with the mapped substring
+                for old, new in replace_map.items():
+                    s = s.replace(old, new)  # Replace each part of the string
+                return s
         
         # List profiles component names
         profile_names  = list(profiles.columns.values)

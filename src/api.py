@@ -2,7 +2,6 @@ from fastapi import FastAPI,UploadFile,HTTPException,File,Path
 from fdb import fdb
 import traceback
 from models import (
-    interface,
     SimParameters,
     JsonTimeseriesResult,
     ListResult,
@@ -11,7 +10,8 @@ from models import (
 )
 import traceback
 import json
-from typing import Any,List
+from api_impl import api_impl
+from typing import List
 
 
 def pivot_table(data: List[TableRow]):
@@ -40,7 +40,7 @@ def pivot_table(data: List[TableRow]):
             extra_keys:list[str] = [
                 v for k,v in d.items() if k not in base_keys and isinstance(v,str)
             ]
-            name = f'{base_name}_{'_'.join(extra_keys)}'
+            name='_'.join([base_name,*extra_keys])
             #Check overlap of power_type and result keys (active, reactive)
             keyarr = [k for k in result.keys() if k in power_type.lower()]
             if len(keyarr) < 1:
@@ -56,7 +56,7 @@ def pivot_table(data: List[TableRow]):
             raise Exception(f'Failed to pivot: {e}')
     return result
 
-i = interface('API')
+i = api_impl()
 app = FastAPI()
     
 #Upload a profile time series json.
@@ -73,7 +73,7 @@ async def post_jts(
     try:
         data = pivot_table(body)
         tsname += '.json'
-        i._d._tsaddraw("profile",tsname,json.dumps(data).encode('utf-8'))
+        i._tsaddraw("profile",tsname,json.dumps(data).encode('utf-8'))
     except Exception as rle:
         raise HTTPException(status_code=400,detail=f'Error adding json {tsname} of {"profile"}: {rle}')
     return {'filename':tsname}
@@ -90,7 +90,7 @@ async def get_jts(
     """
     i.l.info(f'Got request to get resource {tsname} of {"result"} as json')
     try:
-        res = i._d._jtsget("result",tsname)
+        res = i._jtsget("result",tsname)
         res = res.get(list(res.keys())[0])
         res = {k:list(v.values()) for k,v in res.items()}
         return {'result':res}
@@ -106,7 +106,7 @@ async def run_sim(p:SimParameters)->UploadFileResult:
     """
     i.l.info(f'Got request to run simulation with parameters {p.model_dump()}')
     try:
-        i._d._run(p.model_dump())
+        i._run(p.model_dump())
     except Exception:
         i.l.error(traceback.format_exc())
         raise HTTPException(status_code=400,detail=f'Error running simulation.')
@@ -125,7 +125,7 @@ async def post_ts(
     if not fdb.isallowed(file.filename):
         raise HTTPException(status_code=400,detail=f'File type of {file.filename} is not allowed')
     try:
-        i._d._tsaddraw("profile",file.filename,file.file.read())
+        i._tsaddraw("profile",file.filename,file.file.read())
     except Exception as rre:
         raise HTTPException(status_code=400,detail=f'Error writing file: {rre}')
     return {'filename':file.filename}
@@ -140,7 +140,7 @@ async def list_ts(tstype:str=Path(
     """
     i.l.info(f'Got request to list resource {tstype}')
     try:
-        return {'lst':i._d._tslist(tstype)}
+        return {'lst':i._tslist(tstype)}
     except Exception as rle:
         raise HTTPException(status_code=400,detail=f'Error listing {tstype}: {rle}')
 
@@ -159,7 +159,7 @@ async def delete_ts(
     """
     i.l.info(f'Got request to delete resource {tsname} of {tstype}')
     try:
-        i._d._tsdelete(tstype,tsname)
+        i._tsdelete(tstype,tsname)
     except Exception as rde:
         raise HTTPException(status_code=400,detail=f'Error deleting {tstype} {tsname}: {rde}')
     return {'filename':tsname}
@@ -176,7 +176,7 @@ async def post_xml(file:UploadFile=File(
     if not file.filename.endswith('.zip'):
         raise HTTPException(status_code=400,detail=f'Only archives are allowed at this ep')
     try:
-        i._d._xaddraw(file)
+        i._xaddraw(file)
     except Exception as rre:
         raise HTTPException(status_code=400,detail=f'Error writing file: {rre}')
     return {'filename':file.filename}
@@ -189,7 +189,7 @@ async def list_xml()->ListResult:
     """
     i.l.info(f'Got request to list resource xml')
     try:
-        return {'lst':i._d._xlist()}
+        return {'lst':i._xlist()}
     except Exception as rle:
         raise HTTPException(status_code=400,detail=f'Error listing xml: {rle}')
 
@@ -204,7 +204,7 @@ async def delete_xml(xmlname:str=Path(
     """
     i.l.info(f'Got request to delete resource {xmlname} of xml')
     try:
-        i._d._xdelete(xmlname)
+        i._xdelete(xmlname)
     except Exception as rde:
         raise HTTPException(status_code=400,detail=f'Error deleting xml {xmlname}: {rde}')
     return {'filename':xmlname}

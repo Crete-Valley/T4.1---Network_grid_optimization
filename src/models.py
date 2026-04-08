@@ -1,12 +1,9 @@
 import os
-import json
 from typing import Optional, Any,List,Dict
-from delegate import delegate,client_delegate as cd, local_delegate as ld
-from logging import Logger,basicConfig,_nameToLevel,getLogger
 from pydantic import BaseModel,Field,model_validator
 from functools import reduce
 class JsonTimeseries(BaseModel):
-    time: List[int] = Field(
+    time: List[float|int] = Field(
         ..., 
         description="**Required.** A list of time values, one of integer timesteps or unix timestamps."
     )
@@ -38,7 +35,7 @@ class JsonTimeseries(BaseModel):
             if key == "time":
                 continue
             #is float
-            if not reduce(lambda x,y: x and isinstance(y,float|int),value,True):
+            if not reduce(lambda x,y: x and isinstance(y,float|int|str),value,True):
                 raise ValueError(f"Field '{key}' must be a list of float")
             if len(value) < l:
                 raise ValueError(f"All array field must have the same length as the time field")
@@ -194,43 +191,3 @@ class SimParameters(BaseModel):
             }
         }
     }
-
-class interface:
-    _d:delegate
-    l:Logger
-    _mode:str
-    _defaults:dict[str,Any]
-    def __init__(self,name:str):
-        self._mode = interface._get_env('DPS_MODE')
-        log_level = interface._get_env('DPS_LOG_LEVEL')
-        p = interface._get_env('DPS_DEFAULTS')
-        f = open(p,'r')
-        content = f.read()
-        self._defaults = json.loads(content)
-        f.close()
-        if log_level.upper() not in _nameToLevel:
-            raise Exception(f'Unrecognized log level: {log_level}')
-        basicConfig(level=_nameToLevel[log_level])
-        self.l = getLogger(name.upper())
-        self.l.info('Starting with: ')
-        self.l.info(f'DPS_LOG_LEVEL={log_level}')
-        self.l.info(f'DPS_MODE={self._mode}')
-        self.l.info(f'DPS_DEFAULTS={p}')
-        self.l.info(f'Defaults: {self._defaults}')
-        if self._mode == 'client':
-            sv_addr = interface._get_env('DPS_ADDR')
-            self.l.info(f'DPS_ADDR={sv_addr}')
-            self._d = cd(sv_addr)
-        elif self._mode == 'local':
-            root_dir = interface._get_env('DPS_ROOT')
-            self.l.info(f'DPS_ROOT={root_dir}')
-            self._d = ld(root_dir)
-        else:
-            raise Exception(f'Unrecognized mode: {self._mode}')
-        
-    
-    def _get_env(env:str)->str:
-        res = os.getenv(env)
-        if res is None:
-            raise Exception(f'Needed env variable {env} is not set')
-        return res

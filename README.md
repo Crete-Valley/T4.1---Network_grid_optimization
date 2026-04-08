@@ -30,11 +30,10 @@
 Run docker image `registry.git.rwth-aachen.de/acs/public/dpsv:latest`:
 `docker run -p 5000:5000 registry.git.rwth-aachen.de/acs/public/dpsv:latest`
 Then send your requests to localhost:5000.<br>
-Optionally mount a db folder instead of using http, then use the container cli,
+Optionally mount a db folder instead of using http,
 container mount path has to correspond to the DPS_ROOT variable.<br>
 `docker run --name dpsv -v $(pwd)/db:/dpsroot registry.git.rwth-aachen.de/acs/public/dpsv:latest`.<br>
-You can then put your needed files (xml,profiles) directly in the corresponding db subfolder,and use the cli:
-`docker exec dpsv sh -c 'dps run -ux <xml> -up <profile>...etc'`
+You can then put your needed files (xml,profiles) directly in the corresponding db subfolder.
 In this manner, results are retrieved from `<db folder>/result/<sim name>`.<br>
 
 <!-- TOC --><a name="helm"></a>
