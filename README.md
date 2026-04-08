@@ -175,8 +175,8 @@ Parameters required to run a simulation.
 | :--- | :--- | :--- | :--- | :--- |
 | **`name`** | `string` | Name of the simulation/produced result file. | `a9dd9b425335` | `sim-run-1` |
 | **`freq`** | `integer` | Frequency of power grid. | `50` | `50` |
-| **`duration`** | `integer` | Duration of simulation in timesteps. | `300` | `300` |
-| **`timestep`** | `number` | Timestep of simulation. | `1` | `1` |
+| **`duration`** | `integer` | Duration of simulation in timesteps.<br> **IMPORTANT**: This value is effectively ignored when use_profile is provided. The size of the profile timeseries determines the duration. | `300` | `300` |
+| **`timestep`** | `number` | Timestep of simulation.<br> **IMPORTANT**: This value also depends on whether use_profile is provided. If NO profile is provided, the total size of the resulting simulation data will be duration/timestep (e.g duration=300, timestep=0.1 => size=3000), for that reason timestep cannot exceed duration. If a profile is provided, timestep reverts back to being an accuracy parameter of the simulation. We advise adjusting your timestep according to 2 factors: The time difference between two points in the profile timeseries, **and** the timestep/simulation domain relation. Check the DPsim docs for more info.  | `1` | `1` |
 | **`opf`** | `boolean` | Generate a profile from a pandapower optimal powerflow. | `false` | `false` |
 | **`use_profile`** | `string` or `null` | Use uploaded profile data, by keyword. | `null` | |
 | **`replace_map`** | `object` or `null` | Replace component name parts to reconcile profiles and simulation. | `null` | `{"sym": "machine"}` |
