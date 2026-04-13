@@ -174,22 +174,22 @@ class simulator(base_sim):
         if self.use_profile:
             profiles = self.__preproc_profile()
             self.__profile_names = set(profiles.columns.values)
-            
             def getp(comp:str,ts:str=None)->float:
                 try:
-                    attribute = 'P' if f'{comp}_p' in self.__profile_names else 'Q' if f'{comp}_q' in self.__profile_names else ""
-                    if len(attribute) == 0:
-                        return
-                    
                     factor = -1 if 'genstat' in comp else 1
                     clsname = self.system.list_idobjects().get(comp)
                     suffix = "_set" if clsname.endswith('SynchronGenerator') else ""
-                    key = f'{comp}_{attribute.lower()}'
-                    attribute = f'{attribute}{suffix}'
-                    value = profiles[profiles['timestamp'] == ts][key].values[0]
-                    if pd.notna(value):
-                        self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
-                        self.log.debug(f"Assigned {attribute} to {comp}")
+                    for letter in ['p','q']:
+                        key = f'{comp}_{letter}'
+                        if f'{comp}_{letter}' not in self.__profile_names:
+                            self.log.debug(f"Early return detected: {letter}")
+                            continue
+                        attribute = letter.upper()
+                        attribute = f'{attribute}{suffix}'
+                        value = profiles[profiles['timestamp'] == ts][key].values[0]
+                        if pd.notna(value):
+                            self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
+                            self.log.debug(f"Assigned {attribute} to {comp}")
                 except Exception as e:
                     self.log.error(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
                     raise e
@@ -211,8 +211,11 @@ class simulator(base_sim):
         
         if len(funcs) == 0:
             def l():
-                self.sim.run()
+                self.sim.start()
+                for i in range(int(self.duration/self.timestep)):
+                    self.sim.next()
                 self.log.info('Stopping simulation')
+                self.sim.stop()
                 self.__stop()
         else:
             def g(comp:str,ts:str=None):
