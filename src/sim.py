@@ -78,7 +78,7 @@ class simulator(base_sim):
     @staticmethod
     def set_fdb(__fdb:fdb):
         simulator._fdb = __fdb
-    mw_w=10e6
+    mw_w=1e6
     system:Any
     xml:list[str]
     log:Logger
@@ -132,14 +132,13 @@ class simulator(base_sim):
         self.sim = dpsim.Simulation(name=self.name,loglevel=dpsim.LogLevel.off)
         self.__validate()
         self.sim.set_time_step(self.timestep)
+        if self.use_profile is not None :
+            self.duration = int(len(self.__time)*self.timestep)
+            self.log.warning(f"Use Profile duration: {self.duration}")
         self.sim.set_final_time(self.duration)
         self.sim.set_domain(self.domain)
         self.sim.set_solver(self.solver)
-        if self.domain.name == 'SP':
-            self.sim.set_solver_component_behaviour(dpsim.SolverBehaviour.Initialization)
-            self.sim.do_init_from_nodes_and_terminals(True)
-        else:
-            self.sim.set_solver_component_behaviour(dpsim.SolverBehaviour.Simulation)
+        self.sim.set_solver_component_behaviour(dpsim.SolverBehaviour.Simulation)
         self.__add_log()
     
     def __add_log(self)->None:
@@ -176,19 +175,27 @@ class simulator(base_sim):
             self.__profile_names = set(profiles.columns.values)
             def getp(comp:str,ts:str=None)->float:
                 try:
-                    factor = -1 if 'genstat' in comp else 1
-                    clsname = self.system.list_idobjects().get(comp)
-                    suffix = "_set" if clsname.endswith('SynchronGenerator') else ""
-                    for letter in ['p','q']:
+                    #eliminate setting q if sym
+                    arr = ['p'] if 'sym' in comp else ['p','q']
+                    for letter in arr:
                         key = f'{comp}_{letter}'
                         if f'{comp}_{letter}' not in self.__profile_names:
-                            self.log.debug(f"Early return detected: {letter}")
+                            self.log.warning(f"Early return detected: {key}")
                             continue
-                        attribute = letter.upper()
-                        attribute = f'{attribute}{suffix}'
+                        attribute = letter.upper() #P/Q
+                        if self.system.list_idobjects().get(comp).endswith('SynchronGenerator'):
+                            attribute = f'{attribute}_set' #P_set/Q_set
                         value = profiles[profiles['timestamp'] == ts][key].values[0]
+                        #set to 0 if genstat q OR shnt p
+                        #set to -1 if genstat p
+                        #set to 1 otherwise (lod pq, shnt q and sym p)
+                        factor = 1
+                        if 'genstat' in comp and letter == 'q' or 'shnt' in comp and letter == 'p':
+                            factor = 0
+                        if 'genstat' in comp and letter =='p':
+                            factor = -1
                         if pd.notna(value):
-                            self.sim.get_idobj_attr(comp,attribute).set(profiles[profiles['timestamp'] == ts][key].values[0]*simulator.mw_w*factor)
+                            self.sim.get_idobj_attr(comp,attribute).set(value*simulator.mw_w*factor)
                             self.log.debug(f"Assigned {attribute} to {comp}")
                 except Exception as e:
                     self.log.error(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
@@ -269,7 +276,7 @@ class simulator(base_sim):
         reader = dpsim.CIMReader(self.name)
         self.system = reader.loadCIM(self.freq, files, self.domain, dpsim.PhaseType.Single, dpsim.GeneratorType.PVNode)
         self.sim.set_system(self.system)
-        self.__sim_names = [k for k, v in self.system.list_idobjects().items() if  v== 'SP::Ph1::Load' or  v== 'SP::Ph1::Shunt' or  v== 'SP::Ph1::SynchronGenerator']
+        self.__sim_names = [k for k, v in self.system.list_idobjects().items() if  v== 'SP::Ph1::Load' or  v== 'SP::Ph1::SynchronGenerator']
         
     def __preproc_profile(self)->DataFrame:
         self.log.info('Preprocessing profiles')
@@ -297,7 +304,6 @@ class simulator(base_sim):
                     profiles_dict[f'{col}_p'] = df[col]  # Add the active power profile data and extend column name with _p
                 elif fdb.search_str(fdb.to_words(sheet_name),fdb.to_words('reactive')) == 1:
                     profiles_dict[f'{col}_q'] = df[col]  # Add the reactive power profile data and extend column name with _q
-
         return self.__assign_comps(pd.DataFrame.from_dict(profiles_dict).dropna(how='all'))
 
     
@@ -336,7 +342,7 @@ class simulator(base_sim):
                         columns_to_extract.append(profile_name)
                         self.log.debug(f"Profile component '{profile_name}' assigned to simulation component '{sim_name}{suffix}'")
             else:
-                self.log.debug(f"No profile component found for simulation component '{sim_name}'")
+                self.log.warning(f"No profile component found for simulation component '{sim_name}'")
                 
         return profiles[columns_to_extract].rename(columns=rmap, inplace=False)
         
