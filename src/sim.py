@@ -91,6 +91,10 @@ class simulator(base_sim):
     __time:list[str]
     __costgens:list =[]
     state:state
+    accs:dict[str,float] = {
+        'total_load_p':0.0,
+        'total_generation_p':0.0
+    }
     
     def __init__(
         self,
@@ -157,7 +161,21 @@ class simulator(base_sim):
                 logger.log_attribute(comp.name() + '_I', 'current_vector', comp)
                 logger.log_attribute(comp.name() + '_P', 'p_branch_vector', comp)
                 logger.log_attribute(comp.name() + '_Q', 'q_branch_vector', comp)
-            #else load/synchronous generator
+            elif comp.__class__.__name__ =='Load':
+                logger.log_attribute(comp.name() + '.P_set', 'P', comp)
+                logger.log_attribute(comp.name() + '.Q_set', 'Q', comp)
+                #logger.log_attribute(comp.name() + '.Qbranch', 'q_branch_vector', comp)
+            elif comp.__class__.__name__ =='SynchronGenerator':
+                logger.log_attribute(comp.name() + '.P_set', 'P_set', comp)
+                logger.log_attribute(comp.name() + '.Q_set', 'Q_set', comp)
+                logger.log_attribute(comp.name() + '.P_set_pu', 'P_set_pu', comp)
+                logger.log_attribute(comp.name() + '.V_set_pu', 'V_set_pu', comp)
+                #logger.log_attribute(comp.name() + '.Qbranch', 'q_branch_vector', comp)
+            elif comp.__class__.__name__ =='NetworkInjection':
+                logger.log_attribute(comp.name() + '.p_inj', 'p_inj', comp)
+                logger.log_attribute(comp.name() + '.q_inj', 'q_inj', comp)
+
+            
 
         self.sim.add_logger(logger)
     
@@ -173,7 +191,9 @@ class simulator(base_sim):
         if self.use_profile:
             profiles = self.__preproc_profile()
             self.__profile_names = set(profiles.columns.values)
-            def getp(comp:str,ts:str=None)->float:
+            def getp(comp:str,ts:str=None)->None:
+                if 'sym_94361_1' in comp:
+                    return
                 try:
                     #eliminate setting q if sym
                     arr = ['p'] if 'sym' in comp else ['p','q']
@@ -184,7 +204,7 @@ class simulator(base_sim):
                             continue
                         attribute = letter.upper() #P/Q
                         if self.system.list_idobjects().get(comp).endswith('SynchronGenerator'):
-                            attribute = f'{attribute}_set' #P_set/Q_set
+                            attribute = f'{attribute}_set_pu' #P_set/Q_set
                         value = profiles[profiles['timestamp'] == ts][key].values[0]
                         #set to 0 if genstat q OR shnt p
                         #set to -1 if genstat p
@@ -195,7 +215,16 @@ class simulator(base_sim):
                         if 'genstat' in comp and letter =='p':
                             factor = -1
                         if pd.notna(value):
-                            self.sim.get_idobj_attr(comp,attribute).set(value*simulator.mw_w*factor)
+                            final_value = value*simulator.mw_w*factor
+                            if attribute=='P_set_pu':
+                              self.sim.get_idobj_attr(comp,'P_set').set(final_value)
+                              self.sim.get_idobj_attr(comp,attribute).set(final_value/1e8)
+                            else:
+                              self.sim.get_idobj_attr(comp,attribute).set(final_value)
+                            if 'genstat' in comp and attribute=='P' or 'sym' in comp and attribute=='P_set_pu':
+                                self.accs['total_generation_p']+=abs(final_value)
+                            elif 'lod' in comp and attribute == 'P': #load
+                                self.accs['total_load_p']+=final_value
                             self.log.debug(f"Assigned {attribute} to {comp}")
                 except Exception as e:
                     self.log.error(f'Error assigning {attribute} value for {comp}: {traceback.format_exc()}')
@@ -267,8 +296,18 @@ class simulator(base_sim):
         self.__opf_names = set(self.__opf['name'].values)
     
     def __assign_pq(self,timestamp:str)->None:
+        #reset total load accumulators
+        self.accs = {
+            'total_load_p':0.0,
+            'total_generation_p':0.0
+        }
+        
         for comp in self.__sim_names:
             self.__get_profile(comp,timestamp)
+            
+        if 'sym_94361_1' in self.__sim_names:
+            self.sim.get_idobj_attr('sym_94361_1','P_set').set(self.accs['total_load_p']-self.accs['total_generation_p'])
+            self.sim.get_idobj_attr('sym_94361_1', 'P_set_pu').set((self.accs['total_load_p'] - self.accs['total_generation_p'])/1e8)
 
     def __set_sys(self,files:list[str])->None:
         self.log.info('Setting system')

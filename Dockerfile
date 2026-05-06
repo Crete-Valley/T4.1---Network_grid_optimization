@@ -1,4 +1,4 @@
-FROM soullessblob/cv-dpsim-builder:alpha AS builder
+FROM soullessblob/cv-dpsim-builder:latest AS builder
 #prep env
 ENV DPS_ROOT=/dpsroot
 ENV DPS_LOG_LEVEL=INFO
