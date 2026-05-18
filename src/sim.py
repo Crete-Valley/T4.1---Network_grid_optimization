@@ -79,6 +79,7 @@ class simulator(base_sim):
     __loop:Callable
     __time:list[str]
     __costgens:list =[]
+    res_root_dir:str
     accs:dict[str,float] = {
         'total_load_p':0.0,
         'total_generation_p':0.0
