@@ -1,0 +1,24 @@
+{{- if .Values.routing.enabled -}}
+{{- if not .Values.client_issuer.pre_existing }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "app.issuer_name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+{{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Release.Name }}-client-ca-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  isCA: true
+  commonName: "client-ca-spec"
+  secretName: client-ca-secret
+  issuerRef:
+    name: {{ include "app.issuer_name" . }}
+    kind: {{ include "app.issuer_kind" . }}
+{{- end}}

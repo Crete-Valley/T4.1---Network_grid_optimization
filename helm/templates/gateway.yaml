@@ -1,0 +1,59 @@
+{{- if and (eq .Values.routing.type "gateway") .Values.routing.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Release.Name }}-gateway
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- toYaml .Values.routing.annotations | nindent 4 }}
+spec:
+  gatewayClassName: directional-gateway-class
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: {{ .Values.routing.hostname | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: {{ printf "%s-tls-secret" .Release.Name }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-route
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Release.Name }}-gateway
+      namespace: {{ .Release.Namespace }}
+  hostnames:
+    - {{ .Values.routing.hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ .Release.Name }}-svc
+          port: 80
+---
+apiVersion: policy.kuadrant.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: {{ .Release.Name }}-client-mtls
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ .Release.Name }}-gateway
+    namespace: {{ .Release.Namespace }}
+  tls:
+    clientCertificateAuthority:
+      secretRef:
+        name: client-ca-secret
+{{- end }}

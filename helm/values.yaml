@@ -3,4 +3,18 @@ db:
 
 persist:
   enabled: true
-  storage_class: "local-path"
+  storage_class: "rook-ceph-block"
+  size: 5Gi
+
+routing:
+  enabled: false
+  type: "ingress" # or gateway
+  annotations: {
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  } #for cert stuff
+  hostname: "dpsv-ext.k8s.eonerc.rwth-aachen.de"
+
+client_issuer:
+  pre_existing: false
+  name: ""
+  kind: ""

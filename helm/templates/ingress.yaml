@@ -1,0 +1,29 @@
+{{- if and (eq .Values.routing.type "ingress") .Values.routing.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- toYaml .Values.routing.annotations | nindent 4 }}
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+    nginx.ingress.kubernetes.io/auth-tls-secret: {{ printf "%s/client-ca-secret" .Release.Namespace | quote }}
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.routing.hostname | quote }}
+      secretName: {{ printf "%s-tls-secret" .Release.Name }}
+  rules:
+    - host: {{ .Values.routing.hostname | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-svc
+                port:
+                  number: 80
+{{- end }}

@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: dpsv-pvc
+  name: {{ .Release.Name }}-pvc
   namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
-  storageClassName: {{ .Values.storage_class }}
+      storage: {{ .Values.persist.size | default "5Gi" }}
+  storageClassName: {{ .Values.persist.storage_class }}
 {{- end }}

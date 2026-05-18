@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dpsv-deployment
+  name: {{ .Release.Name }}-deployment
   namespace: {{ .Release.Namespace }}
   labels:
     app: dpsv
@@ -22,12 +22,12 @@ spec:
         emptyDir: {}
       - name: xml-init-volume
         configMap:
-          name: dpsv-xml-init
+          name: {{ .Release.Name }}-config
       {{ end }}
       {{- if .Values.persist.enabled }}
-      - name: dpsv-volume
+      - name: {{ .Release.Name }}-volume
         persistentVolumeClaim:
-          claimName: dpsv-pvc
+          claimName: {{ .Release.Name }}-pvc
       {{ end }}
       {{ end }}
       {{- if .Values.db.init }}
@@ -46,12 +46,12 @@ spec:
               chmod -R 777 /destination
       {{ end }}
       containers:
-      - name: dpsv-container
+      - name: {{ .Release.Name }}-container
         image: registry.git.rwth-aachen.de/acs/public/dpsv:latest
         {{- if or .Values.db.init .Values.persist.enabled }}
         volumeMounts:
         {{- if .Values.persist.enabled }}
-        - name: dpsv-volume
+        - name: {{ .Release.Name }}-volume
           mountPath: /dpsroot
         {{ end }}
         {{ if .Values.db.init }}
