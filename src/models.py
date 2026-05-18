@@ -126,7 +126,7 @@ class params:
     
 class SimParameters(BaseModel):
     name: str = Field(
-        default=os.urandom(6).hex(),
+        default_factory=lambda: os.urandom(6).hex(),
         description="Name of the simulation/produced result file"
     )
     

@@ -1,4 +1,4 @@
-from pandas import DataFrame,read_excel,read_json,read_csv
+from pandas import DataFrame,read_excel,read_csv
 import os 
 import json
 from shutil import rmtree
@@ -49,45 +49,24 @@ class fdb:
     
     def tsget(self,tstype:__tstype,tsname:str)->dict[str,DataFrame]:
         self.l.info(f'Getting timeseries {tsname} of {tstype}')
-        self.__check(tstype)
-        f = self.__search_files(tsname,fdb.__ts[tstype])[0]
-        return fdb.__get(self.__path(fdb.__ts[tstype],f),f)
-    
-    def tsput(self,tstype:__tstype,tsname:str,*args:DataFrame)->None:
-        self.l.info(f'Writing tiemseries {tsname} of {tstype}')
-        self.__check(tstype)
-        for df in args:
-            df.to_json(self.__path(fdb.__resoruces[tstype],f'{tsname}-{df.name}'))
+        return fdb.__get(self.__path(fdb.__ts[tstype],tsname),tsname)
     
     def tsaddraw(self,tstype:__tstype,tsname:str,content:bytes):
         self.l.info(f'Adding raw {tsname} of {tstype}')
-        self.__check(tstype)
         with open(self.__path(fdb.__ts[tstype],tsname),'bw') as f:
             f.write(content)
         
     def tslist(self,tstype:__tstype)->list[str]:
         self.l.info(f'Listing resources of {tstype}')
-        self.__check(tstype)
         return os.listdir(self.__path(fdb.__ts[tstype]))
 
     def tsdelete(self,tstype:__tstype,tsname:str)->None:
         self.l.info(f'Deleting resource {tstype} of {tsname}')
-        self.__check(tstype)
-        f = self.__search_files(tsname,fdb.__ts[tstype])[0]
-        os.remove(self.__path(fdb.__ts[tstype],f))
-    
-    def tslink(self,tstype:__tstype,path:str)->None:
-        self.l.info(f'Linking resource of {tstype} at {path}')
-        self.__check(tstype)
-        tsname = path.split('/')[-1]
-        if not path.startswith('/'):
-            path = os.getcwd()+'/'+path
-        self.l.info(f'Linking file {tsname} in {path}')
-        os.link(path,self.__path(fdb.__ts[tstype],tsname))
+        os.remove(self.__path(fdb.__ts[tstype],tsname))
         
     def xmlget(self,xname:str)->list[str]:
         self.l.info(f'Getting xml file paths for{xname}')
-        d = self.__path(fdb.__xmls,self.__search_files(xname,fdb.__xmls)[0])
+        d = self.__path(fdb.__xmls,xname)
         return [f'{d}/{f}' for f in os.listdir(d)]
 
     def xmlput(self,archive:UploadFile)->None:
@@ -108,21 +87,8 @@ class fdb:
     
     def xmldelete(self,xname:str):
         self.l.info(f'Deleting xml {xname}')
-        d = self.__path(fdb.__xmls,self.__search_files(xname,fdb.__xmls)[0])
-        rmtree(d)
-    
-    def xmllink(self,path:str)->None:
-        self.l.info(f'Linking xml directory {path}')
-        tsname = path.split('/')[-1]
-        if not path.startswith('/'):
-            path = os.getcwd()+'/'+path
-        os.symlink(path,self.__path(fdb.__xmls,tsname))
-    
-    def __check(self,tstype:__tstype)->None:
-        if not (tstype in fdb.__ts):
-            self.l.error(f'No resource matches type {tstype}')
-            raise Exception(f'No resource matches type {tstype}')
-        
+        rmtree(xname)
+
     @staticmethod
     def __get(path:str,fname:str)->dict[str,DataFrame]:
         if fdb.__ext(fname,'.json'):
@@ -154,7 +120,12 @@ class fdb:
     def __path(self,*args:str)->str:
         return '/'.join([self.__rootdir,*args])
     
-    def __search_files(self,rname:str,subdir:str,once:bool = True)->list[str]:
+    def check(self,tstype:__tstype)->None:
+        if not (tstype in fdb.__ts):
+            self.l.error(f'No resource matches type {tstype}')
+            raise Exception(f'No resource matches type {tstype}')
+    
+    def search_files(self,rname:str,subdir:str,once:bool = True)->list[str]:
         fff = 'without' if once else 'with'
         self.l.info(f'Searching files for {rname} in {subdir} {fff} tolerance')
         words = fdb.to_words(rname)
@@ -163,7 +134,9 @@ class fdb:
         scores.sort()
         if once:
             self.__exact_once(scores,rname,len(words))
-        return [s.name for s in scores]
+        result = [s.name for s in reversed(scores)]
+        self.l.info(f'Top candidate: {result[0]}')
+        return result
     
     @staticmethod
     def to_words(_str:str)->set[str]:

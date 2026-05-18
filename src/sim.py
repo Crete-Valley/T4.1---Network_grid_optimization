@@ -1,13 +1,11 @@
 from functools import reduce
 from typing import Optional,Any,Callable
 import dpsim
-import io
 from logging import Logger,getLogger
 import pandas as pd
 from pandas import DataFrame
 import pandapower as pp
 import traceback
-from shutil import rmtree
 from pandapower.converter.cim import from_cim as cim2pp
 import os 
 import re
@@ -16,16 +14,16 @@ from fdb import fdb
 class base_sim:        
     def __init__(
             self,
-            name:str = os.urandom(6).hex(),
-            freq:int = 50,
-            duration:int=5,
-            timestep:float=1,
-            domain:str = 'SP',
-            solver:str = 'NRP',
-            opf:bool=False,
-            use_profile:str = None,
-            use_xml:str = None,
-            replace_map:dict[str,str] = {}
+            name:str,
+            freq:int,
+            duration:int,
+            timestep:float,
+            domain:str ,
+            solver:str ,
+            opf:bool,
+            use_profile:str,
+            use_xml:str,
+            replace_map:dict[str,str]
     ):
         
         self.name = name
@@ -62,15 +60,6 @@ class base_sim:
     use_xml:str
     domain: Any
     solver: Any
-    
-class state:
-    configure:str = None
-    preproc_profile:str = None
-    opf:str = None
-    sim:str = None
-    
-    def __init__(self):
-        pass
 
 class simulator(base_sim):
     
@@ -90,7 +79,6 @@ class simulator(base_sim):
     __loop:Callable
     __time:list[str]
     __costgens:list =[]
-    state:state
     accs:dict[str,float] = {
         'total_load_p':0.0,
         'total_generation_p':0.0
@@ -98,38 +86,28 @@ class simulator(base_sim):
     
     def __init__(
         self,
-        name:str = os.urandom(6).hex(),
-        freq:int = 50,
-        duration:int=100,
-        timestep:float=0.1,
-        domain:str = 'SP',
-        solver:str = 'NRP',
-        opf:bool=False,
-        use_profile:str = None,
-        use_xml:str = None,
-        replace_map:dict[str,str] = {}
+        name:str,
+        freq:int ,
+        duration:int,
+        timestep:float,
+        domain:str,
+        solver:str,
+        opf:bool,
+        use_profile:str,
+        use_xml:str,
+        replace_map:dict[str,str],
+        res_root_dir:str
     ):
         super().__init__(
             name,freq,duration,timestep,domain,solver,opf,use_profile,use_xml,replace_map
         )
         self.log = getLogger(f'SIM-{self.name}')
+        dpsim.Logger.set_log_dir(f'{self.res_root_dir}/{self.name}')
+        self.res_root_dir = res_root_dir
 
     def start(self):
         self.log.info('Starting simulation loop')
         self.__loop()
-    
-    
-    def __stop(self):
-        #BYTES->DF
-        df = pd.read_csv(f'logs/{self.name}.csv')
-
-        #STRIP SPACES
-        df.columns = [col.strip() for col in df.columns]
-        #DF->BYTES
-        output_buffer = io.StringIO()
-        df.to_csv(output_buffer)
-        simulator._fdb.tsaddraw('result', self.name + '.csv', output_buffer.getvalue().encode('utf-8'))
-        rmtree('logs')
         
     def configure(self) -> None:
         self.log.info('Configuring')
@@ -147,8 +125,8 @@ class simulator(base_sim):
     
     def __add_log(self)->None:
         self.log.info('Adding logger')
-        #set logger
-        logger = dpsim.Logger(self.name)
+        #invert the nesting logic
+        logger = dpsim.Logger("run")
         for node in self.system.nodes:
             logger.log_attribute(node.name()+'_V', 'v', node)
             
@@ -252,7 +230,6 @@ class simulator(base_sim):
                     self.sim.next()
                 self.log.info('Stopping simulation')
                 self.sim.stop()
-                self.__stop()
         else:
             def g(comp:str,ts:str=None):
                 for func in funcs:
@@ -266,7 +243,6 @@ class simulator(base_sim):
                         self.sim.next()
                     self.log.info('Stopping simulation')
                     self.sim.stop()
-                    self.__stop()
             else:
                 def l():
                     self.sim.start()
@@ -277,7 +253,6 @@ class simulator(base_sim):
                         t+=self.timestep
                     self.log.info('Stopping simulation')
                     self.sim.stop()
-                    self.__stop()
         self.__loop = l
     
     def __run_opf(self,files)->None:
