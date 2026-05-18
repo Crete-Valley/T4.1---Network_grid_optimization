@@ -87,7 +87,8 @@ class fdb:
     
     def xmldelete(self,xname:str):
         self.l.info(f'Deleting xml {xname}')
-        rmtree(xname)
+        d = self.__path(self.__xmls,xname)
+        rmtree(d)
 
     @staticmethod
     def __get(path:str,fname:str)->dict[str,DataFrame]:

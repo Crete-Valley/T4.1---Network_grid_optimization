@@ -103,8 +103,8 @@ class simulator(base_sim):
             name,freq,duration,timestep,domain,solver,opf,use_profile,use_xml,replace_map
         )
         self.log = getLogger(f'SIM-{self.name}')
-        dpsim.Logger.set_log_dir(f'{self.res_root_dir}/{self.name}')
         self.res_root_dir = res_root_dir
+        dpsim.Logger.set_log_dir(f'{self.res_root_dir}/{self.name}')
 
     def start(self):
         self.log.info('Starting simulation loop')
