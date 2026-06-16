@@ -9,10 +9,13 @@ routing:
   enabled: false
   type: "ingress" # or gateway
   annotations: {
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  } #for cert stuff
+    #for tls stuff
+    cert-manager.io/cluster-issuer: "letsencrypt-prod",
+     #Depending on usecase, controller could respond with 413 entity too large
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+  } 
   hostname: "dpsv-ext.k8s.eonerc.rwth-aachen.de"
-
+#access restriction
 client_issuer:
   pre_existing: false
   name: ""
