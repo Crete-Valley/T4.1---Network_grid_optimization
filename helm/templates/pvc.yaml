@@ -10,5 +10,4 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persist.size | default "5Gi" }}
-  storageClassName: {{ .Values.persist.storage_class }}
 {{- end }}

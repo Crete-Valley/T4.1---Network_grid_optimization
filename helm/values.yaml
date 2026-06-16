@@ -3,7 +3,6 @@ db:
 
 persist:
   enabled: true
-  storage_class: "rook-ceph-block"
   size: 5Gi
 
 routing:
